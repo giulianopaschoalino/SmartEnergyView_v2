@@ -1,200 +1,379 @@
-
-import React, { useState, useEffect } from 'react';
-import { UserSession, EnergyRecord, ViewMode } from './types';
-import Login from './components/Login';
-import PolicyAgreement from './components/PolicyAgreement';
-import Dashboard from './components/Dashboard';
-import AnalysisView from './components/AnalysisView';
-import { generateMockData } from './services/dataService';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { UserSession, EnergyRecord, ViewMode, Language, Alert, AppNotification } from './types.ts';
+import Login from './components/Login.tsx';
+import PolicyAgreement from './components/PolicyAgreement.tsx';
+import Dashboard from './components/Dashboard.tsx';
+import AnalysisView from './components/AnalysisView.tsx';
+import EconomyView from './components/EconomyView.tsx';
+import HistoricalView from './components/HistoricalView.tsx';
+import AlertsView from './components/AlertsView.tsx';
+import NewsView from './components/NewsView.tsx';
+import PLDView from './components/PLDView.tsx'; // Import new view
+import SettingsView from './components/SettingsView.tsx';
+import ProfileView from './components/ProfileView.tsx';
+import InfinityLogo from './components/InfinityLogo.tsx';
+import { generateMockData } from './services/dataService.ts';
+import { translations } from './translations.ts';
+import { 
+  LayoutDashboard, 
+  History, 
+  Bell, 
+  Wallet, 
+  Settings, 
+  Newspaper, 
+  User, 
+  Menu,
+  X,
+  CheckCircle2,
+  AlertTriangle,
+  ChevronRight,
+  Globe // Icon for PLD
+} from 'lucide-react';
 
 const APP_POLICY_VERSION = "2023.10.1";
+const SESSION_KEY = 'smartenergia_session';
+const THEME_KEY = 'smartenergia_theme';
+const LANG_KEY = 'smartenergia_lang';
+const ALERTS_KEY = 'smartenergia_alerts';
+const NOTIFS_KEY = 'smartenergia_notifications';
 
 const App: React.FC = () => {
   const [session, setSession] = useState<UserSession>(() => {
-    const stored = localStorage.getItem('smartenergia_session');
-    if (stored) {
-      return JSON.parse(stored);
-    }
+    try {
+      const storedLocal = localStorage.getItem(SESSION_KEY);
+      if (storedLocal) return JSON.parse(storedLocal);
+      const storedSession = sessionStorage.getItem(SESSION_KEY);
+      if (storedSession) return JSON.parse(storedSession);
+    } catch (e) { console.error("Session parse error", e); }
     return {
       isAuthenticated: false,
       email: null,
       hasAgreedToPolicy: false,
-      policyVersion: APP_POLICY_VERSION
+      policyVersion: APP_POLICY_VERSION,
+      keepLoggedIn: false
     };
   });
 
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => {
+    const stored = localStorage.getItem(THEME_KEY) as 'light' | 'dark' | 'system';
+    return stored || 'system';
+  });
+
+  const [language, setLanguage] = useState<Language>(() => {
+    const stored = localStorage.getItem(LANG_KEY) as Language;
+    if (stored) return stored;
+    const browserLang = navigator.language.split('-')[0];
+    if (['en', 'pt', 'es'].includes(browserLang)) return browserLang as Language;
+    return 'en';
+  });
+
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    const stored = localStorage.getItem('smartenergia_theme');
-    if (stored) return stored === 'dark';
+    const stored = localStorage.getItem(THEME_KEY) as 'light' | 'dark' | 'system';
+    const activeTheme = stored || 'system';
+    if (activeTheme === 'dark') return true;
+    if (activeTheme === 'light') return false;
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Dashboard);
-  const [data] = useState<EnergyRecord[]>(() => generateMockData(90));
+  const [data] = useState<EnergyRecord[]>(() => generateMockData(1095));
+  
+  const [alerts, setAlerts] = useState<Alert[]>(() => {
+    const stored = localStorage.getItem(ALERTS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    const stored = localStorage.getItem(NOTIFS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const t = useMemo(() => translations[language], [language]);
+
+  const userInitial = useMemo(() => {
+    return session.email ? session.email[0].toUpperCase() : 'U';
+  }, [session.email]);
 
   useEffect(() => {
-    localStorage.setItem('smartenergia_session', JSON.stringify(session));
+    localStorage.setItem(ALERTS_KEY, JSON.stringify(alerts));
+  }, [alerts]);
+
+  useEffect(() => {
+    localStorage.setItem(NOTIFS_KEY, JSON.stringify(notifications));
+  }, [notifications]);
+
+  useEffect(() => {
+    if (alerts.length === 0 || data.length === 0) return;
+
+    const recentData = data[data.length - 1];
+    const triggeredAlerts: AppNotification[] = [];
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    alerts.forEach(alert => {
+      if (!alert.enabled) return;
+      const sourceMatch = alert.source === 'All' || recentData.source === alert.source;
+      if (!sourceMatch) return;
+
+      let triggered = false;
+      const val = alert.type === 'usage' ? recentData.usageKWh : recentData.cost;
+      
+      if (alert.condition === 'greater' && val > alert.threshold) triggered = true;
+      if (alert.condition === 'less' && val < alert.threshold) triggered = true;
+
+      if (triggered) {
+        const alreadyNotifiedToday = notifications.some(n => 
+          n.title === t.alerts.notificationTitle && 
+          n.timestamp.startsWith(todayStr)
+        );
+        
+        if (!alreadyNotifiedToday) {
+          const currency = language === 'pt' ? 'R$' : '$';
+          const msg = alert.type === 'usage' 
+            ? t.alerts.usageExceeded.replace('{val}', val.toFixed(2)) 
+            : t.alerts.costExceeded.replace('{val}', `${currency}${val.toFixed(2)}`);
+
+          triggeredAlerts.push({
+            id: `alert-${Date.now()}-${alert.id}`,
+            title: t.alerts.notificationTitle,
+            message: msg,
+            timestamp: new Date().toISOString(),
+            read: false,
+            type: 'alert'
+          });
+        }
+      }
+    });
+
+    if (triggeredAlerts.length > 0) {
+      setNotifications(prev => [...triggeredAlerts, ...prev]);
+    }
+  }, [data, alerts, language, t.alerts, notifications]);
+
+  useEffect(() => {
+    const sessionStr = JSON.stringify(session);
+    if (session.keepLoggedIn) {
+      localStorage.setItem(SESSION_KEY, sessionStr);
+      sessionStorage.removeItem(SESSION_KEY);
+    } else {
+      sessionStorage.setItem(SESSION_KEY, sessionStr);
+    }
   }, [session]);
 
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('smartenergia_theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('smartenergia_theme', 'light');
+    localStorage.setItem(THEME_KEY, theme);
+    const applyTheme = () => {
+      let activeDark = false;
+      if (theme === 'dark') activeDark = true;
+      else if (theme === 'light') activeDark = false;
+      else activeDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setIsDarkMode(activeDark);
+      if (activeDark) document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+    };
+    applyTheme();
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = () => applyTheme();
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
     }
-  }, [isDarkMode]);
+  }, [theme]);
 
-  const handleLogin = (email: string) => {
+  useEffect(() => {
+    localStorage.setItem(LANG_KEY, language);
+  }, [language]);
+
+  const handleLogin = useCallback((email: string, keepLoggedIn: boolean) => {
     setSession(prev => ({
       ...prev,
       isAuthenticated: true,
       email: email,
+      keepLoggedIn: keepLoggedIn,
       hasAgreedToPolicy: prev.policyVersion === APP_POLICY_VERSION ? prev.hasAgreedToPolicy : false
     }));
+  }, []);
+
+  const handleAgree = useCallback(() => {
+    setSession(prev => ({ ...prev, hasAgreedToPolicy: true, policyVersion: APP_POLICY_VERSION }));
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    setSession({ isAuthenticated: false, email: null, hasAgreedToPolicy: false, policyVersion: APP_POLICY_VERSION, keepLoggedIn: false });
+    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
+  }, []);
+
+  if (!session.isAuthenticated) return <Login onLogin={handleLogin} isDarkMode={isDarkMode} t={t.login} />;
+  if (!session.hasAgreedToPolicy) return <PolicyAgreement onAgree={handleAgree} onDisagree={handleLogout} t={t.policy} />;
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markAllRead = () => {
+    setNotifications(prev => prev.map(n => ({...n, read: true})));
   };
 
-  const handleAgree = () => {
-    setSession(prev => ({
-      ...prev,
-      hasAgreedToPolicy: true,
-      policyVersion: APP_POLICY_VERSION
-    }));
+  const clearNotifications = () => {
+    setNotifications([]);
   };
 
-  const handleDisagree = () => {
-    setSession({
-      isAuthenticated: false,
-      email: null,
-      hasAgreedToPolicy: false,
-      policyVersion: APP_POLICY_VERSION
-    });
-    alert("You must agree to the policy to use Smart Energia dashboard.");
+  const renderContent = () => {
+    switch (viewMode) {
+      case ViewMode.Dashboard:
+        return <Dashboard data={data} isDarkMode={isDarkMode} t={t.dashboard} lang={language} />;
+      case ViewMode.Analysis:
+        return <AnalysisView data={data} t={t.analysis} lang={language} />;
+      case ViewMode.Economy:
+        return <EconomyView data={data} t={t.economy} lang={language} />;
+      case ViewMode.Historical:
+        return <HistoricalView data={data} t={t.historical} lang={language} />;
+      case ViewMode.Alerts:
+        return <AlertsView alerts={alerts} onAddAlert={(a) => setAlerts([...alerts, a])} onDeleteAlert={(id) => setAlerts(alerts.filter(a => a.id !== id))} t={t} lang={language} />;
+      case ViewMode.News:
+        return <NewsView t={t} />;
+      case ViewMode.PLD:
+        return <PLDView t={t} lang={language} />;
+      case ViewMode.Settings:
+        return <SettingsView theme={theme} setTheme={setTheme} language={language} setLanguage={setLanguage} email={session.email} t={t.settings} onEditProfile={() => setViewMode(ViewMode.Profile)} />;
+      case ViewMode.Profile:
+        return <ProfileView email={session.email} t={t.profile} onBack={() => setViewMode(ViewMode.Settings)} />;
+      default:
+        return <Dashboard data={data} isDarkMode={isDarkMode} t={t.dashboard} lang={language} />;
+    }
   };
 
-  const handleLogout = () => {
-    setSession({
-      isAuthenticated: false,
-      email: null,
-      hasAgreedToPolicy: false,
-      policyVersion: APP_POLICY_VERSION
-    });
-  };
+  const navMenuItems = [
+    { id: ViewMode.Dashboard, label: t.nav.dashboard, icon: LayoutDashboard },
+    { id: ViewMode.Historical, label: t.nav.historical, icon: History },
+    { id: ViewMode.PLD, label: t.nav.pld, icon: Globe },
+    { id: ViewMode.Economy, label: t.nav.economy, icon: Wallet },
+    { id: ViewMode.Alerts, label: t.nav.alerts, icon: Bell },
+    { id: ViewMode.News, label: t.nav.news, icon: Newspaper }
+  ];
 
-  const toggleTheme = () => setIsDarkMode(!isDarkMode);
-
-  if (!session.isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
-  }
-
-  if (!session.hasAgreedToPolicy) {
-    return <PolicyAgreement onAgree={handleAgree} onDisagree={handleDisagree} />;
-  }
+  const activeMode = viewMode === ViewMode.Profile ? ViewMode.Settings : viewMode;
 
   return (
-    <div className="min-h-screen bg-[#F2F2F7] dark:bg-[#1C1C1E] transition-colors duration-300">
-      {/* Navigation Shell */}
-      <nav className="glass sticky top-0 z-40 px-6 py-4 flex items-center justify-between shadow-sm border-b border-white/50 dark:border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-          </div>
-          <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white hidden sm:block">Smart Energia</span>
+    <div className="min-h-screen bg-floral dark:bg-black transition-colors duration-300">
+      {/* Dynamic Sidebar/Nav for Desktop */}
+      <nav className="glass sticky top-0 z-40 px-4 md:px-6 py-4 pt-safe flex items-center justify-between shadow-sm border-b border-[#375785]/10">
+        <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setViewMode(ViewMode.Dashboard)}>
+          <InfinityLogo className="w-24 h-auto sm:w-32 md:w-40" isDarkMode={isDarkMode} />
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-6">
-          <div className="hidden md:flex items-center bg-gray-200/50 dark:bg-gray-800 p-1 rounded-xl">
-            <button 
-              onClick={() => setViewMode(ViewMode.Dashboard)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${viewMode === ViewMode.Dashboard ? 'bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}
-            >
-              Dashboard
-            </button>
-            <button 
-              onClick={() => setViewMode(ViewMode.Analysis)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${viewMode === ViewMode.Analysis ? 'bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}
-            >
-              Analysis
-            </button>
-            <button 
-              onClick={() => setViewMode(ViewMode.Settings)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${viewMode === ViewMode.Settings ? 'bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}
-            >
-              Settings
-            </button>
+        <div className="flex items-center gap-3 md:gap-6">
+          <div className="hidden lg:flex items-center bg-gray-200/40 dark:bg-night p-1 rounded-2xl border border-gray-300/20">
+            {navMenuItems.map(mode => (
+              <button 
+                key={mode.id}
+                onClick={() => setViewMode(mode.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeMode === mode.id ? 'bg-yinmn text-white shadow-lg shadow-yinmn/30' : 'text-slate-500 hover:text-yinmn dark:text-slate-400 dark:hover:text-white'}`}
+              >
+                <mode.icon className="w-3.5 h-3.5" />
+                {mode.label}
+              </button>
+            ))}
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-6 border-l border-gray-300 dark:border-gray-700 pl-4 sm:pl-6">
-            <button
-              onClick={toggleTheme}
-              className="w-10 h-10 rounded-xl bg-gray-200/50 dark:bg-gray-800 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Toggle dark mode"
-            >
-              {isDarkMode ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" /></svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+          <div className="flex items-center gap-2 sm:gap-4 lg:border-l lg:border-gray-300 lg:dark:border-gray-700 lg:pl-4 relative">
+            <div className="relative">
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="w-10 h-10 rounded-full glass flex items-center justify-center text-yinmn dark:text-white hover:shadow-md transition-all relative group"
+                aria-label={t.notifications.title}
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse border-2 border-white dark:border-night" />
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-4 w-72 sm:w-80 bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-3xl rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.3)] border border-gray-200 dark:border-white/10 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+                  <div className="p-4 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
+                    <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-yinmn dark:text-white opacity-80">{t.notifications.title}</h4>
+                    <div className="flex gap-3">
+                      <button onClick={markAllRead} className="text-[10px] font-bold text-bondi uppercase tracking-tight hover:opacity-70 transition-opacity">{t.notifications.markRead}</button>
+                      <button onClick={clearNotifications} className="text-[10px] font-bold text-red-500 uppercase tracking-tight hover:opacity-70 transition-opacity">{t.notifications.clear}</button>
+                    </div>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto custom-scrollbar">
+                    {notifications.length === 0 ? (
+                      <div className="py-16 px-6 text-center flex flex-col items-center gap-4">
+                        <div className="w-12 h-12 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center">
+                          <Bell className="w-6 h-6 text-slate-300 dark:text-slate-600" />
+                        </div>
+                        <p className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">
+                          {t.notifications.empty}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-gray-50 dark:divide-white/5">
+                        {notifications.map(n => (
+                          <div key={n.id} className={`p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors ${!n.read ? 'bg-bondi/5' : ''}`}>
+                            <div className="flex items-start gap-3">
+                              {n.type === 'alert' ? <AlertTriangle className="w-4 h-4 text-red-500 mt-1" /> : <CheckCircle2 className="w-4 h-4 text-blue-500 mt-1" />}
+                              <div className="flex-1">
+                                <p className={`text-xs font-bold ${n.read ? 'text-slate-600 dark:text-slate-300' : 'text-night dark:text-white'}`}>{n.title}</p>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium leading-relaxed">{n.message}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
+            </div>
+
+            {/* Universal Settings Button */}
+            <button 
+              onClick={() => setViewMode(ViewMode.Settings)}
+              className={`w-10 h-10 rounded-full glass flex items-center justify-center transition-all group ${viewMode === ViewMode.Settings ? 'bg-yinmn text-white shadow-lg' : 'text-yinmn dark:text-white hover:shadow-md'}`}
+              aria-label={t.nav.settings}
+            >
+              <Settings className={`w-5 h-5 ${viewMode === ViewMode.Settings ? 'animate-[spin_4s_linear_infinite]' : ''}`} />
             </button>
 
-            <div className="hidden sm:block text-right">
-              <p className="text-xs font-bold text-gray-900 dark:text-white leading-none">{session.email?.split('@')[0]}</p>
-              <p className="text-[10px] text-gray-600 dark:text-gray-400 uppercase tracking-widest mt-0.5">Premium Plan</p>
-            </div>
             <button 
-              onClick={handleLogout}
-              className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-colors group"
-              title="Logout"
+              onClick={() => setViewMode(ViewMode.Profile)}
+              className={`w-10 h-10 rounded-full bg-gradient-to-br from-yinmn to-bondi flex items-center justify-center text-white font-black text-xs shadow-lg hover:scale-105 active:scale-95 transition-all border-2 ${viewMode === ViewMode.Profile ? 'border-white dark:border-night ring-2 ring-yinmn' : 'border-transparent'}`}
             >
-              <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+              {userInitial}
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Main Content Area */}
-      <main className="pb-24 sm:pb-8">
-        {viewMode === ViewMode.Dashboard ? (
-          <Dashboard data={data} isDarkMode={isDarkMode} />
-        ) : viewMode === ViewMode.Analysis ? (
-          <AnalysisView data={data} />
-        ) : (
-          <div className="flex items-center justify-center h-[60vh]">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gray-200 dark:bg-gray-800 rounded-3xl mx-auto flex items-center justify-center mb-4">
-                 <svg className="w-10 h-10 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">View in Progress</h2>
-              <p className="text-gray-600 dark:text-gray-400">The {viewMode} module is currently being optimized.</p>
-            </div>
-          </div>
-        )}
+      {/* Main content with improved bottom padding for floating bar */}
+      <main className="pb-40 lg:pb-16 pt-4 min-h-[calc(100vh-100px)]">
+        {renderContent()}
       </main>
 
-      {/* Mobile Tab Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 glass border-t border-white/50 dark:border-white/10 px-6 py-3 flex justify-between items-center z-50">
-        <button 
-          onClick={() => setViewMode(ViewMode.Dashboard)}
-          className={`flex flex-col items-center gap-1 ${viewMode === ViewMode.Dashboard ? 'text-blue-600' : 'text-gray-600 dark:text-gray-500'}`}
-        >
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-          <span className="text-[10px] font-bold">Dashboard</span>
-        </button>
-        <button 
-          onClick={() => setViewMode(ViewMode.Analysis)}
-          className={`flex flex-col items-center gap-1 ${viewMode === ViewMode.Analysis ? 'text-blue-600' : 'text-gray-600 dark:text-gray-500'}`}
-        >
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg>
-          <span className="text-[10px] font-bold">Analysis</span>
-        </button>
-        <button 
-          onClick={() => setViewMode(ViewMode.Settings)}
-          className={`flex flex-col items-center gap-1 ${viewMode === ViewMode.Settings ? 'text-blue-600' : 'text-gray-600 dark:text-gray-500'}`}
-        >
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zM19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/></svg>
-          <span className="text-[10px] font-bold">Settings</span>
-        </button>
+      {/* Improved Mobile Tab Bar based on Screen Edits */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe px-3 sm:px-4">
+        <div className="bg-white/95 dark:bg-night/95 backdrop-blur-2xl rounded-[32px] border border-slate-200 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] flex justify-between items-center h-20 px-2 mb-4">
+          {navMenuItems.map(item => {
+            const isActive = activeMode === item.id;
+            return (
+              <button 
+                key={item.id} 
+                onClick={() => setViewMode(item.id)} 
+                className={`flex-1 flex flex-col items-center justify-center gap-1.5 transition-all duration-300 ${isActive ? 'text-yinmn dark:text-bondi' : 'text-slate-400 dark:text-slate-600 hover:text-slate-500'}`}
+                aria-label={item.label}
+              >
+                <div className={`p-2 rounded-2xl transition-colors ${isActive ? 'bg-yinmn/5' : ''}`}>
+                  <item.icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px]' : 'stroke-[1.5px]'}`} />
+                </div>
+                <span className={`text-[9px] font-black uppercase tracking-tighter sm:tracking-widest text-center px-0.5 leading-none ${isActive ? 'opacity-100' : 'opacity-70'}`}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

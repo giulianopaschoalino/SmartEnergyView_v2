@@ -1,35 +1,46 @@
-
-import { EnergyRecord } from '../types';
+import { EnergyRecord } from '../types.ts';
 
 export const generateMockData = (days: number = 30): EnergyRecord[] => {
   const data: EnergyRecord[] = [];
   const now = new Date();
   
+  // To handle historical data, generate more than 1 year (e.g. 1095 days = ~3 years)
   for (let i = days; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
     
-    // Generate 3 records per day for different sources
-    const solarBase = Math.random() * 15 + 5;
-    const gridBase = Math.random() * 20 + 10;
-    const batteryBase = Math.random() * 8 + 2;
+    // Seasonal variation (sin wave based on month)
+    const month = date.getMonth();
+    const seasonFactor = 1 + 0.3 * Math.sin((month / 12) * 2 * Math.PI);
+    
+    // Tariffs: Captive is usually significantly higher in Brazil (25-40% more)
+    const solarBase = (Math.random() * 15 + 5) * (seasonFactor < 1 ? seasonFactor : 1.2); 
+    const gridBase = (Math.random() * 20 + 10) * seasonFactor;
+    const batteryBase = (Math.random() * 8 + 2);
+
+    // Helper for captive cost calculation (simulating ~30% higher than average grid)
+    const captiveTariff = 0.35; 
 
     data.push({
-      timestamp: date.toISOString().split('T')[0],
+      timestamp: dateStr,
       usageKWh: solarBase,
-      cost: solarBase * 0.05, // Lower cost for solar
+      cost: solarBase * 0.05,
+      captiveCost: solarBase * captiveTariff,
       source: 'Solar'
     });
     data.push({
-      timestamp: date.toISOString().split('T')[0],
+      timestamp: dateStr,
       usageKWh: gridBase,
-      cost: gridBase * 0.22, // Higher grid cost
+      cost: gridBase * 0.22, 
+      captiveCost: gridBase * captiveTariff,
       source: 'Grid'
     });
     data.push({
-      timestamp: date.toISOString().split('T')[0],
+      timestamp: dateStr,
       usageKWh: batteryBase,
       cost: batteryBase * 0.08,
+      captiveCost: batteryBase * captiveTariff,
       source: 'Battery'
     });
   }
@@ -45,11 +56,13 @@ export const filterData = (data: EnergyRecord[], startDate: string, endDate: str
 };
 
 export const exportToCSV = (data: EnergyRecord[]) => {
-  const headers = ['Timestamp', 'Usage (kWh)', 'Cost (USD)', 'Source'];
+  const headers = ['Timestamp', 'Usage (kWh)', 'Free Cost', 'Captive Cost', 'Economy', 'Source'];
   const rows = data.map(item => [
     item.timestamp,
     item.usageKWh.toFixed(3),
     item.cost.toFixed(3),
+    item.captiveCost.toFixed(3),
+    (item.captiveCost - item.cost).toFixed(3),
     item.source
   ]);
 
@@ -62,7 +75,7 @@ export const exportToCSV = (data: EnergyRecord[]) => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `smart_energia_export_${new Date().toISOString().split('T')[0]}.csv`);
+  link.setAttribute('download', `smart_energia_economy_${new Date().toISOString().split('T')[0]}.csv`);
   link.style.visibility = 'hidden';
   document.body.appendChild(link);
   link.click();

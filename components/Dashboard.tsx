@@ -1,212 +1,271 @@
-
 import React, { useMemo, useState, useEffect } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { EnergyRecord, ChartFilter } from '../types';
-import { getEnergyInsights } from '../services/geminiService';
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
+  ResponsiveContainer, BarChart, Bar, ComposedChart, Line, Legend, Cell 
+} from 'recharts';
+import { EnergyRecord, ChartFilter } from '../types.ts';
+import { getEnergyInsights } from '../services/geminiService.ts';
+import { Zap, DollarSign, TrendingUp, BarChart2, Info, RefreshCw } from 'lucide-react';
 
 interface DashboardProps {
   data: EnergyRecord[];
   isDarkMode: boolean;
+  t: any;
+  lang: string;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ data, isDarkMode }) => {
+const INSIGHTS_CACHE_BASE_KEY = 'smart_energia_ai_insights';
+
+const Dashboard: React.FC<DashboardProps> = ({ data, isDarkMode, t, lang }) => {
   const [filter, setFilter] = useState<ChartFilter>({
     startDate: '',
     endDate: '',
     source: 'All'
   });
-  const [aiInsights, setAiInsights] = useState<string | null>(null);
+  
+  const cacheKey = `${INSIGHTS_CACHE_BASE_KEY}_${lang}`;
+  
+  const [aiInsights, setAiInsights] = useState<string | null>(() => {
+    return sessionStorage.getItem(cacheKey);
+  });
   const [loadingInsights, setLoadingInsights] = useState(false);
+
+  useEffect(() => {
+    const cached = sessionStorage.getItem(cacheKey);
+    setAiInsights(cached);
+    if (!cached && !loadingInsights) {
+      fetchInsights();
+    }
+  }, [lang, cacheKey]);
 
   const filteredData = useMemo(() => {
     return data.filter(item => {
-      const sourceMatch = filter.source === 'All' || item.source === filter.source;
-      return sourceMatch;
-    }).slice(-60); // Show last 60 records for performance/view
+      return filter.source === 'All' || item.source === filter.source;
+    }).slice(-45);
   }, [data, filter.source]);
 
   const stats = useMemo(() => {
     const totalUsage = filteredData.reduce((sum, item) => sum + item.usageKWh, 0);
     const totalCost = filteredData.reduce((sum, item) => sum + item.cost, 0);
+    const totalCaptive = filteredData.reduce((sum, item) => sum + (item.captiveCost || 0), 0);
+    const economy = totalCaptive - totalCost;
     const avgUsage = totalUsage / (filteredData.length || 1);
-    return { totalUsage, totalCost, avgUsage };
+    return { totalUsage, totalCost, avgUsage, economy };
   }, [filteredData]);
+
+  const annualData = useMemo(() => {
+    const years: Record<string, number> = {};
+    data.forEach(d => {
+      const year = new Date(d.timestamp).getFullYear().toString();
+      const savings = d.captiveCost - d.cost;
+      years[year] = (years[year] || 0) + savings;
+    });
+    return Object.entries(years).map(([year, economy]) => ({ year, economy })).sort((a, b) => a.year.localeCompare(b.year));
+  }, [data]);
+
+  const monthlyComparison = useMemo(() => {
+    const months: Record<string, { month: string; captive: number; free: number; economy: number }> = {};
+    // Last 6 months approximation
+    const last180 = data.slice(-180);
+    
+    last180.forEach(d => {
+      const date = new Date(d.timestamp);
+      const mLabel = date.toLocaleDateString(lang, { month: 'short', year: '2-digit' });
+      if (!months[mLabel]) {
+        months[mLabel] = { month: mLabel, captive: 0, free: 0, economy: 0 };
+      }
+      months[mLabel].captive += d.captiveCost;
+      months[mLabel].free += d.cost;
+      months[mLabel].economy += (d.captiveCost - d.cost);
+    });
+    
+    return Object.values(months);
+  }, [data, lang]);
 
   const fetchInsights = async () => {
     setLoadingInsights(true);
-    const insights = await getEnergyInsights(filteredData);
-    setAiInsights(insights);
-    setLoadingInsights(false);
+    try {
+      const insights = await getEnergyInsights(filteredData, lang);
+      setAiInsights(insights);
+      if (insights) {
+        sessionStorage.setItem(cacheKey, insights);
+      }
+    } catch (error) {
+      console.error("Failed to fetch insights:", error);
+    } finally {
+      setLoadingInsights(false);
+    }
   };
 
-  useEffect(() => {
-    fetchInsights();
-  }, []);
+  const palette = {
+    primary: '#375785',
+    bondi: '#1991B3',
+    success: '#27908F',
+    warning: '#E89D45',
+    tick: isDarkMode ? '#88898A' : '#475569',
+    grid: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(55,87,133,0.1)',
+    tooltipBg: isDarkMode ? '#1E1E1E' : '#FFFFFF',
+    tooltipText: isDarkMode ? '#F8FAFC' : '#0F172A',
+  };
 
-  const chartColors = {
-    grid: isDarkMode ? '#374151' : '#E5E7EB',
-    tick: isDarkMode ? '#9CA3AF' : '#4B5563', // Darker tick color for light mode
-    tooltipBg: isDarkMode ? '#1F2937' : 'rgba(255,255,255,0.9)',
-    tooltipText: isDarkMode ? '#F3F4F6' : '#111827',
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString(lang, { day: '2-digit', month: 'short' });
+  };
+
+  const currencyPrefix = lang === 'pt' ? 'R$' : '$';
+
+  const renderFormattedInsights = (text: string) => {
+    if (!text) return null;
+    const lines = text.split(/\n+/).map(l => l.trim()).filter(l => l.length > 0);
+    return (
+      <div className="space-y-4">
+        {lines.map((line, idx) => {
+          const content = line.replace(/^(\*|-|\d+\.)\s+/, '');
+          return (
+            <div key={`insight-${idx}`} className="flex gap-4 items-start animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${idx * 100}ms` }}>
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-yinmn/20 dark:bg-yinmn/30 flex items-center justify-center mt-0.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-yinmn"></div>
+              </div>
+              <p className="text-slate-800 dark:text-slate-200 leading-relaxed text-sm font-medium">{content}</p>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 transition-colors duration-300">
-      {/* Header & Filter Bar */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-in fade-in duration-500">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Overview</h2>
-          <p className="text-gray-600 dark:text-gray-400">Your energy performance at a glance</p>
+          <h2 className="text-4xl font-black text-night dark:text-white tracking-tight">{t.title}</h2>
+          <p className="text-slate-600 dark:text-slate-400 font-medium">{t.subtitle}</p>
         </div>
         
-        <div className="glass px-4 py-3 rounded-2xl flex items-center gap-4 shadow-sm border border-white/60 dark:border-white/10">
-          <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">SOURCE:</span>
-          <div className="flex p-1 bg-gray-200/50 dark:bg-gray-800 rounded-xl">
-            {['All', 'Solar', 'Grid', 'Battery'].map(s => (
+        <div className="glass px-4 py-3 rounded-2xl flex items-center gap-4 shadow-sm border border-slate-200 dark:border-white/10 overflow-x-auto no-scrollbar">
+          <span className="text-xs font-black text-slate-800 dark:text-slate-300 uppercase tracking-widest whitespace-nowrap">{t.source}</span>
+          <div className="flex p-1 bg-slate-100 dark:bg-night rounded-xl">
+            {(['All', 'Solar', 'Grid', 'Battery'] as const).map(s => (
               <button
                 key={s}
-                onClick={() => setFilter({ ...filter, source: s as any })}
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                  filter.source === s 
-                  ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-white shadow-sm' 
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-                }`}
+                onClick={() => setFilter({ ...filter, source: s })}
+                className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all whitespace-nowrap ${filter.source === s ? 'bg-yinmn text-white shadow-sm' : 'text-slate-500 hover:text-yinmn dark:hover:text-white'}`}
               >
-                {s}
+                {t.sources[s]}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Hero Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass p-6 rounded-[24px] shadow-sm border border-white/60 dark:border-white/10">
-          <div className="flex items-center gap-3 mb-2 text-blue-600 dark:text-blue-400">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-            <span className="text-xs font-bold uppercase tracking-wider">Total Usage</span>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {[
+          { label: t.stats.usage, val: stats.totalUsage.toFixed(1), unit: 'kWh', color: 'border-l-yinmn', icon: Zap },
+          { label: t.stats.cost, val: `${currencyPrefix}${stats.totalCost.toFixed(2)}`, unit: '', color: 'border-l-bondi', icon: DollarSign },
+          { label: t.stats.economyTitle, val: `${currencyPrefix}${stats.economy.toFixed(2)}`, unit: '', color: 'border-l-success', icon: TrendingUp },
+          { label: t.stats.avg, val: stats.avgUsage.toFixed(1), unit: 'kWh/d', color: 'border-l-warning', icon: BarChart2 }
+        ].map((item, i) => (
+          <div key={i} className={`glass p-5 md:p-6 rounded-4xl shadow-sm border-l-4 ${item.color} group hover:scale-[1.02] transition-all`}>
+            <div className="flex items-center gap-2 mb-3 opacity-70">
+              <item.icon className="w-4 h-4" />
+              <span className="text-[10px] md:text-[11px] font-black uppercase tracking-widest">{item.label}</span>
+            </div>
+            <div className="flex items-baseline gap-1 md:gap-2">
+              <span className="text-xl md:text-3xl font-black text-night dark:text-white">{item.val}</span>
+              {item.unit && <span className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-tighter">{item.unit}</span>}
+            </div>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold text-gray-900 dark:text-white">{stats.totalUsage.toFixed(1)}</span>
-            <span className="text-lg text-gray-600 dark:text-gray-400 font-medium">kWh</span>
-          </div>
-        </div>
-        
-        <div className="glass p-6 rounded-[24px] shadow-sm border border-white/60 dark:border-white/10">
-          <div className="flex items-center gap-3 mb-2 text-green-600 dark:text-green-400">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <span className="text-xs font-bold uppercase tracking-wider">Estimated Cost</span>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold text-gray-900 dark:text-white">${stats.totalCost.toFixed(2)}</span>
-            <span className="text-lg text-gray-600 dark:text-gray-400 font-medium">USD</span>
-          </div>
-        </div>
-
-        <div className="glass p-6 rounded-[24px] shadow-sm border border-white/60 dark:border-white/10">
-          <div className="flex items-center gap-3 mb-2 text-orange-600 dark:text-orange-400">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-            <span className="text-xs font-bold uppercase tracking-wider">Avg. Consumption</span>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold text-gray-900 dark:text-white">{stats.avgUsage.toFixed(1)}</span>
-            <span className="text-lg text-gray-600 dark:text-gray-400 font-medium">kWh/h</span>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Main Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="glass p-8 rounded-[30px] shadow-sm border border-white/60 dark:border-white/10">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Usage Trend</h3>
-          <div className="h-[300px]">
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {/* Usage Trend */}
+        <div className="glass p-6 md:p-8 rounded-5xl shadow-sm">
+          <h3 className="text-xl font-black text-night dark:text-white mb-8">{t.charts.usageTrend}</h3>
+          <div className="h-[300px] sm:h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={filteredData}>
                 <defs>
-                  <linearGradient id="colorUsage" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                  <linearGradient id="usageDashboard" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={palette.primary} stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor={palette.primary} stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartColors.grid} />
-                <XAxis dataKey="timestamp" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: chartColors.tick}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: chartColors.tick}} />
-                <Tooltip 
-                  contentStyle={{ 
-                    borderRadius: '16px', 
-                    border: 'none', 
-                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', 
-                    backgroundColor: chartColors.tooltipBg,
-                    color: chartColors.tooltipText
-                  }} 
-                  itemStyle={{ color: chartColors.tooltipText }}
-                />
-                <Area type="monotone" dataKey="usageKWh" stroke="#3B82F6" strokeWidth={3} fillOpacity={1} fill="url(#colorUsage)" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={palette.grid} />
+                <XAxis dataKey="timestamp" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: palette.tick}} dy={10} tickFormatter={formatDate}/>
+                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: palette.tick}} />
+                <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', backgroundColor: palette.tooltipBg, color: palette.tooltipText, fontWeight: 'bold', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} labelFormatter={formatDate}/>
+                <Area type="monotone" dataKey="usageKWh" stroke={palette.primary} strokeWidth={4} fill="url(#usageDashboard)" animationDuration={1500} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="glass p-8 rounded-[30px] shadow-sm border border-white/60 dark:border-white/10">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Cost Distribution</h3>
-          <div className="h-[300px]">
+        {/* Cost Comparison */}
+        <div className="glass p-6 md:p-8 rounded-5xl shadow-sm">
+          <h3 className="text-xl font-black text-night dark:text-white mb-8">{t.charts.costVsFree}</h3>
+          <div className="h-[300px] sm:h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={filteredData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartColors.grid} />
-                <XAxis dataKey="timestamp" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: chartColors.tick}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: chartColors.tick}} />
-                <Tooltip 
-                  contentStyle={{ 
-                    borderRadius: '16px', 
-                    border: 'none', 
-                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', 
-                    backgroundColor: chartColors.tooltipBg,
-                    color: chartColors.tooltipText
-                  }} 
-                  itemStyle={{ color: chartColors.tooltipText }}
-                />
-                <Bar dataKey="cost" fill="#10B981" radius={[6, 6, 0, 0]} />
-              </BarChart>
+              <ComposedChart data={monthlyComparison}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={palette.grid} />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: palette.tick}} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: palette.tick}} />
+                <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', backgroundColor: palette.tooltipBg, color: palette.tooltipText, fontWeight: 'bold', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
+                <Legend verticalAlign="top" height={36} iconType="circle" />
+                <Bar name={t.charts.captive} dataKey="captive" fill="#94A3B8" opacity={0.3} radius={[4, 4, 0, 0]} />
+                <Bar name={t.charts.free} dataKey="free" fill={palette.primary} radius={[4, 4, 0, 0]} />
+                <Line name={t.charts.economy} type="monotone" dataKey="economy" stroke={palette.success} strokeWidth={3} dot={{ r: 4, fill: palette.success }} />
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* AI Insights Section */}
-      <div className="glass p-8 rounded-[30px] shadow-sm border border-white/60 dark:border-white/10 bg-gradient-to-br from-white/40 to-blue-50/30 dark:from-gray-800/40 dark:to-blue-900/10">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">AI Efficiency Insights</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Personalized recommendations by Gemini</p>
-            </div>
-          </div>
-          <button 
-            onClick={fetchInsights}
-            disabled={loadingInsights}
-            className="px-4 py-2 bg-white dark:bg-gray-700 rounded-xl shadow-sm border border-gray-100 dark:border-gray-600 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-          >
-            {loadingInsights ? 'Refining...' : 'Refresh Insights'}
-          </button>
+      {/* AI Insights Card */}
+      <div className="glass p-8 rounded-5xl shadow-xl border-2 border-yinmn/10 bg-gradient-to-br from-yinmn/5 via-transparent to-transparent relative overflow-hidden">
+        <div className="absolute -right-12 -bottom-12 opacity-5">
+           <Info className="w-64 h-64 text-yinmn" />
         </div>
-        
-        <div className="prose prose-blue dark:prose-invert max-w-none">
-          {loadingInsights ? (
-            <div className="space-y-3">
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2"></div>
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-2/3"></div>
+        <div className="relative z-10">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 bg-yinmn rounded-2xl flex items-center justify-center text-white shadow-lg shadow-yinmn/20">
+                <RefreshCw className={`w-7 h-7 ${loadingInsights ? 'animate-spin' : ''}`} />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-night dark:text-white tracking-tight">{t.ai.title}</h3>
+                <p className="text-sm text-slate-500 font-bold uppercase tracking-widest">{t.ai.subtitle}</p>
+              </div>
             </div>
-          ) : (
-            <div className="text-gray-800 dark:text-gray-300 leading-relaxed whitespace-pre-line">
-              {aiInsights || "Generating insights for your energy profile..."}
-            </div>
-          )}
+            <button 
+              onClick={fetchInsights} 
+              disabled={loadingInsights} 
+              className="px-6 py-3 rounded-2xl font-black text-sm bg-white dark:bg-night border border-slate-200 dark:border-white/10 hover:shadow-md transition-all flex items-center gap-2 text-yinmn active:scale-95"
+            >
+              <RefreshCw className={`w-4 h-4 ${loadingInsights ? 'animate-spin' : ''}`} />
+              {loadingInsights ? t.ai.loading : t.ai.refresh}
+            </button>
+          </div>
+          
+          <div className="min-h-[160px]">
+            {loadingInsights ? (
+              <div className="space-y-4">
+                <div className="h-4 bg-slate-200 dark:bg-white/5 rounded-full w-full animate-pulse" />
+                <div className="h-4 bg-slate-200 dark:bg-white/5 rounded-full w-4/5 animate-pulse" />
+                <div className="h-4 bg-slate-200 dark:bg-white/5 rounded-full w-3/4 animate-pulse" />
+              </div>
+            ) : aiInsights ? (
+              renderFormattedInsights(aiInsights)
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 text-center space-y-3">
+                <Info className="w-8 h-8 text-slate-300" />
+                <p className="text-slate-400 font-bold italic">{t.ai.default}</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -1,13 +1,11 @@
-
 import { GoogleGenAI } from "@google/genai";
-import { EnergyRecord } from "../types";
+import { EnergyRecord } from "../types.ts";
 
-const API_KEY = process.env.API_KEY || "";
+// Note: API_KEY is handled externally via process.env.API_KEY.
 
-export const getEnergyInsights = async (data: EnergyRecord[]) => {
-  if (!API_KEY) return "AI Insights unavailable. Please provide an API key.";
-
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+export const getEnergyInsights = async (data: EnergyRecord[], language: string = 'en') => {
+  // Always initialize right before use to ensure the most current environment variables are used.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   // Aggregate data for a concise prompt
   const summary = data.reduce((acc, curr) => {
@@ -17,13 +15,23 @@ export const getEnergyInsights = async (data: EnergyRecord[]) => {
     return acc;
   }, { totalUsage: 0, totalCost: 0, sources: {} as any });
 
+  const languageContexts: Record<string, string> = {
+    en: "Please provide the response in English.",
+    pt: "Por favor, forneça a resposta em Português do Brasil.",
+    es: "Por favor, proporcione la respuesta en Español."
+  };
+
+  const currentContext = languageContexts[language] || languageContexts.en;
+
   const prompt = `
     Analyze this energy consumption data for the past 30 days:
     Total Usage: ${summary.totalUsage.toFixed(2)} kWh
-    Total Cost: $${summary.totalCost.toFixed(2)}
+    Total Cost: ${language === 'pt' ? 'R$' : '$'}${summary.totalCost.toFixed(2)}
     Breakdown by source: ${JSON.stringify(summary.sources)}
     
-    Provide 3 concise, actionable bullet points for cost saving and efficiency, following a professional yet encouraging tone suitable for a high-end consumer app.
+    ${currentContext}
+    Provide 3 concise, actionable bullet points for cost saving and efficiency, following a professional yet encouraging tone suitable for a high-end consumer app. 
+    Use the appropriate currency symbol and formatting for the selected language.
   `;
 
   try {
@@ -34,6 +42,8 @@ export const getEnergyInsights = async (data: EnergyRecord[]) => {
     return response.text;
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "Unable to generate insights at this time.";
+    return language === 'pt' ? "Não foi possível gerar insights no momento." : 
+           language === 'es' ? "No se pudo generar información en este momento." : 
+           "Unable to generate insights at this time.";
   }
 };
