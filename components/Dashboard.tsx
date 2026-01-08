@@ -53,16 +53,6 @@ const Dashboard: React.FC<DashboardProps> = ({ data, isDarkMode, t, lang }) => {
     return { totalUsage, totalCost, avgUsage, economy };
   }, [filteredData]);
 
-  const annualData = useMemo(() => {
-    const years: Record<string, number> = {};
-    data.forEach(d => {
-      const year = new Date(d.timestamp).getFullYear().toString();
-      const savings = d.captiveCost - d.cost;
-      years[year] = (years[year] || 0) + savings;
-    });
-    return Object.entries(years).map(([year, economy]) => ({ year, economy })).sort((a, b) => a.year.localeCompare(b.year));
-  }, [data]);
-
   const monthlyComparison = useMemo(() => {
     const months: Record<string, { month: string; captive: number; free: number; economy: number }> = {};
     // Last 6 months approximation
@@ -120,13 +110,25 @@ const Dashboard: React.FC<DashboardProps> = ({ data, isDarkMode, t, lang }) => {
     return (
       <div className="space-y-4">
         {lines.map((line, idx) => {
-          const content = line.replace(/^(\*|-|\d+\.)\s+/, '');
+          // Remove bullet characters if present at start
+          const cleanLine = line.replace(/^(\*|-|\d+\.)\s+/, '');
+          
+          // Split by bold patterns **text**
+          const segments = cleanLine.split(/(\*\*.*?\*\*)/g);
+          
           return (
             <div key={`insight-${idx}`} className="flex gap-4 items-start animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${idx * 100}ms` }}>
               <div className="flex-shrink-0 w-6 h-6 rounded-full bg-yinmn/20 dark:bg-yinmn/30 flex items-center justify-center mt-0.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-yinmn"></div>
               </div>
-              <p className="text-slate-800 dark:text-slate-200 leading-relaxed text-sm font-medium">{content}</p>
+              <div className="text-slate-800 dark:text-slate-200 leading-relaxed text-sm font-medium">
+                {segments.map((segment, i) => {
+                  if (segment.startsWith('**') && segment.endsWith('**')) {
+                    return <strong key={i} className="font-extrabold text-yinmn dark:text-bondi">{segment.slice(2, -2)}</strong>;
+                  }
+                  return <span key={i}>{segment}</span>;
+                })}
+              </div>
             </div>
           );
         })}

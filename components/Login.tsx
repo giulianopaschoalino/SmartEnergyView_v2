@@ -1,15 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import InfinityLogo from './InfinityLogo.tsx';
 
 interface LoginProps {
   onLogin: (email: string, keepLoggedIn: boolean) => void;
+  onRealLogin: (email: string, pass: string, keepLoggedIn: boolean) => void;
   isDarkMode?: boolean;
   t: any;
 }
 
 type LoginMode = 'signin' | 'signup' | 'reset';
 
-const Login: React.FC<LoginProps> = ({ onLogin, isDarkMode = false, t }) => {
+const Login: React.FC<LoginProps> = ({ onRealLogin, isDarkMode = false, t }) => {
   const [mode, setMode] = useState<LoginMode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,20 +23,12 @@ const Login: React.FC<LoginProps> = ({ onLogin, isDarkMode = false, t }) => {
     e.preventDefault();
     if (mode === 'signin') {
       if (email && password) {
-        onLogin(email, keepLoggedIn);
+        onRealLogin(email, password, keepLoggedIn);
       }
     } else if (mode === 'signup') {
-      if (email && password && password === confirmPassword) {
-        onLogin(email, keepLoggedIn);
-      }
+      // Signup implementation would hit UserController@store
     } else if (mode === 'reset') {
-      if (email) {
-        setResetSent(true);
-        setTimeout(() => {
-          setResetSent(false);
-          setMode('signin');
-        }, 3000);
-      }
+      // Reset implementation would hit ForgotPasswordController
     }
   };
 

@@ -10,7 +10,8 @@ interface HistoricalViewProps {
 
 const HistoricalView: React.FC<HistoricalViewProps> = ({ data, t, lang }) => {
   const years = useMemo(() => {
-    const uniqueYears = Array.from(new Set(data.map(d => new Date(d.timestamp).getFullYear())));
+    // Explicitly typing uniqueYears as number[] to ensure 'a' and 'b' in sort are numbers
+    const uniqueYears: number[] = Array.from(new Set(data.map(d => new Date(d.timestamp).getFullYear())));
     return uniqueYears.sort((a, b) => b - a);
   }, [data]);
 

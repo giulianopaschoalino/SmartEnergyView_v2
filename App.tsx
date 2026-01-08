@@ -8,12 +8,13 @@ import EconomyView from './components/EconomyView.tsx';
 import HistoricalView from './components/HistoricalView.tsx';
 import AlertsView from './components/AlertsView.tsx';
 import NewsView from './components/NewsView.tsx';
-import PLDView from './components/PLDView.tsx'; // Import new view
+import PLDView from './components/PLDView.tsx';
 import SettingsView from './components/SettingsView.tsx';
 import ProfileView from './components/ProfileView.tsx';
 import InfinityLogo from './components/InfinityLogo.tsx';
-import { generateMockData } from './services/dataService.ts';
+import { fetchConsumptionLogs, authService } from './services/dataService.ts';
 import { translations } from './translations.ts';
+import { ApiClient } from './services/apiClient.ts';
 import { 
   LayoutDashboard, 
   History, 
@@ -22,12 +23,10 @@ import {
   Settings, 
   Newspaper, 
   User, 
-  Menu,
-  X,
-  CheckCircle2,
-  AlertTriangle,
-  ChevronRight,
-  Globe // Icon for PLD
+  Globe,
+  List,
+  MoreHorizontal,
+  X
 } from 'lucide-react';
 
 const APP_POLICY_VERSION = "2023.10.1";
@@ -41,16 +40,25 @@ const App: React.FC = () => {
   const [session, setSession] = useState<UserSession>(() => {
     try {
       const storedLocal = localStorage.getItem(SESSION_KEY);
-      if (storedLocal) return JSON.parse(storedLocal);
+      if (storedLocal) {
+        const parsed = JSON.parse(storedLocal);
+        if (parsed.token) ApiClient.setAuthToken(parsed.token);
+        return parsed;
+      }
       const storedSession = sessionStorage.getItem(SESSION_KEY);
-      if (storedSession) return JSON.parse(storedSession);
+      if (storedSession) {
+        const parsed = JSON.parse(storedSession);
+        if (parsed.token) ApiClient.setAuthToken(parsed.token);
+        return parsed;
+      }
     } catch (e) { console.error("Session parse error", e); }
     return {
       isAuthenticated: false,
       email: null,
       hasAgreedToPolicy: false,
       policyVersion: APP_POLICY_VERSION,
-      keepLoggedIn: false
+      keepLoggedIn: false,
+      token: undefined
     };
   });
 
@@ -76,7 +84,9 @@ const App: React.FC = () => {
   });
 
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Dashboard);
-  const [data] = useState<EnergyRecord[]>(() => generateMockData(1095));
+  const [data, setData] = useState<EnergyRecord[]>([]);
+  const [isFetchingData, setIsFetchingData] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   
   const [alerts, setAlerts] = useState<Alert[]>(() => {
     const stored = localStorage.getItem(ALERTS_KEY);
@@ -97,6 +107,31 @@ const App: React.FC = () => {
   }, [session.email]);
 
   useEffect(() => {
+    const handleUnauthorized = () => handleLogout();
+    window.addEventListener('api-unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('api-unauthorized', handleUnauthorized);
+  }, []);
+
+  useEffect(() => {
+    if (session.isAuthenticated && session.token) {
+      const loadInitialData = async () => {
+        setIsFetchingData(true);
+        try {
+          // Set token in ApiClient before first call
+          ApiClient.setAuthToken(session.token || null);
+          const result = await fetchConsumptionLogs(365);
+          setData(result);
+        } catch (e) {
+          console.error("Data load failed", e);
+        } finally {
+          setIsFetchingData(false);
+        }
+      };
+      loadInitialData();
+    }
+  }, [session.isAuthenticated, session.token]);
+
+  useEffect(() => {
     localStorage.setItem(ALERTS_KEY, JSON.stringify(alerts));
   }, [alerts]);
 
@@ -105,59 +140,13 @@ const App: React.FC = () => {
   }, [notifications]);
 
   useEffect(() => {
-    if (alerts.length === 0 || data.length === 0) return;
-
-    const recentData = data[data.length - 1];
-    const triggeredAlerts: AppNotification[] = [];
-    const todayStr = new Date().toISOString().split('T')[0];
-
-    alerts.forEach(alert => {
-      if (!alert.enabled) return;
-      const sourceMatch = alert.source === 'All' || recentData.source === alert.source;
-      if (!sourceMatch) return;
-
-      let triggered = false;
-      const val = alert.type === 'usage' ? recentData.usageKWh : recentData.cost;
-      
-      if (alert.condition === 'greater' && val > alert.threshold) triggered = true;
-      if (alert.condition === 'less' && val < alert.threshold) triggered = true;
-
-      if (triggered) {
-        const alreadyNotifiedToday = notifications.some(n => 
-          n.title === t.alerts.notificationTitle && 
-          n.timestamp.startsWith(todayStr)
-        );
-        
-        if (!alreadyNotifiedToday) {
-          const currency = language === 'pt' ? 'R$' : '$';
-          const msg = alert.type === 'usage' 
-            ? t.alerts.usageExceeded.replace('{val}', val.toFixed(2)) 
-            : t.alerts.costExceeded.replace('{val}', `${currency}${val.toFixed(2)}`);
-
-          triggeredAlerts.push({
-            id: `alert-${Date.now()}-${alert.id}`,
-            title: t.alerts.notificationTitle,
-            message: msg,
-            timestamp: new Date().toISOString(),
-            read: false,
-            type: 'alert'
-          });
-        }
-      }
-    });
-
-    if (triggeredAlerts.length > 0) {
-      setNotifications(prev => [...triggeredAlerts, ...prev]);
-    }
-  }, [data, alerts, language, t.alerts, notifications]);
-
-  useEffect(() => {
     const sessionStr = JSON.stringify(session);
     if (session.keepLoggedIn) {
       localStorage.setItem(SESSION_KEY, sessionStr);
       sessionStorage.removeItem(SESSION_KEY);
     } else {
       sessionStorage.setItem(SESSION_KEY, sessionStr);
+      localStorage.removeItem(SESSION_KEY);
     }
   }, [session]);
 
@@ -173,208 +162,173 @@ const App: React.FC = () => {
       else document.documentElement.classList.remove('dark');
     };
     applyTheme();
-    if (theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = () => applyTheme();
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
   }, [theme]);
 
-  useEffect(() => {
-    localStorage.setItem(LANG_KEY, language);
-  }, [language]);
+  const handleLogin = useCallback(async (email: string, password: string, keepLoggedIn: boolean) => {
+    try {
+      const response = await authService.login({ email, password });
+      
+      // Update ApiClient token immediately to avoid race conditions with effects
+      ApiClient.setAuthToken(response.token);
 
-  const handleLogin = useCallback((email: string, keepLoggedIn: boolean) => {
-    setSession(prev => ({
-      ...prev,
-      isAuthenticated: true,
-      email: email,
-      keepLoggedIn: keepLoggedIn,
-      hasAgreedToPolicy: prev.policyVersion === APP_POLICY_VERSION ? prev.hasAgreedToPolicy : false
-    }));
+      setSession(prev => ({
+        ...prev,
+        isAuthenticated: true,
+        email: email,
+        token: response.token,
+        keepLoggedIn: keepLoggedIn,
+        hasAgreedToPolicy: prev.policyVersion === APP_POLICY_VERSION ? prev.hasAgreedToPolicy : false
+      }));
+    } catch (e) {
+      alert("Login failed: " + (e as Error).message);
+    }
   }, []);
 
   const handleAgree = useCallback(() => {
     setSession(prev => ({ ...prev, hasAgreedToPolicy: true, policyVersion: APP_POLICY_VERSION }));
   }, []);
 
-  const handleLogout = useCallback(() => {
-    setSession({ isAuthenticated: false, email: null, hasAgreedToPolicy: false, policyVersion: APP_POLICY_VERSION, keepLoggedIn: false });
+  const handleLogout = useCallback(async () => {
+    try { await authService.logout(); } catch (e) {}
+    ApiClient.setAuthToken(null);
+    setSession({ isAuthenticated: false, email: null, hasAgreedToPolicy: false, policyVersion: APP_POLICY_VERSION, keepLoggedIn: false, token: undefined });
     localStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem(SESSION_KEY);
+    setViewMode(ViewMode.Dashboard);
   }, []);
 
-  if (!session.isAuthenticated) return <Login onLogin={handleLogin} isDarkMode={isDarkMode} t={t.login} />;
+  if (!session.isAuthenticated) return <Login onLogin={(email, keep) => {}} onRealLogin={handleLogin} isDarkMode={isDarkMode} t={t.login} />;
   if (!session.hasAgreedToPolicy) return <PolicyAgreement onAgree={handleAgree} onDisagree={handleLogout} t={t.policy} />;
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const markAllRead = () => {
-    setNotifications(prev => prev.map(n => ({...n, read: true})));
-  };
-
-  const clearNotifications = () => {
-    setNotifications([]);
-  };
-
-  const renderContent = () => {
-    switch (viewMode) {
-      case ViewMode.Dashboard:
-        return <Dashboard data={data} isDarkMode={isDarkMode} t={t.dashboard} lang={language} />;
-      case ViewMode.Analysis:
-        return <AnalysisView data={data} t={t.analysis} lang={language} />;
-      case ViewMode.Economy:
-        return <EconomyView data={data} t={t.economy} lang={language} />;
-      case ViewMode.Historical:
-        return <HistoricalView data={data} t={t.historical} lang={language} />;
-      case ViewMode.Alerts:
-        return <AlertsView alerts={alerts} onAddAlert={(a) => setAlerts([...alerts, a])} onDeleteAlert={(id) => setAlerts(alerts.filter(a => a.id !== id))} t={t} lang={language} />;
-      case ViewMode.News:
-        return <NewsView t={t} />;
-      case ViewMode.PLD:
-        return <PLDView t={t} lang={language} />;
-      case ViewMode.Settings:
-        return <SettingsView theme={theme} setTheme={setTheme} language={language} setLanguage={setLanguage} email={session.email} t={t.settings} onEditProfile={() => setViewMode(ViewMode.Profile)} />;
-      case ViewMode.Profile:
-        return <ProfileView email={session.email} t={t.profile} onBack={() => setViewMode(ViewMode.Settings)} />;
-      default:
-        return <Dashboard data={data} isDarkMode={isDarkMode} t={t.dashboard} lang={language} />;
-    }
-  };
-
   const navMenuItems = [
     { id: ViewMode.Dashboard, label: t.nav.dashboard, icon: LayoutDashboard },
+    { id: ViewMode.Analysis, label: t.nav.analysis, icon: List },
     { id: ViewMode.Historical, label: t.nav.historical, icon: History },
-    { id: ViewMode.PLD, label: t.nav.pld, icon: Globe },
     { id: ViewMode.Economy, label: t.nav.economy, icon: Wallet },
+    { id: ViewMode.PLD, label: t.nav.pld, icon: Globe },
     { id: ViewMode.Alerts, label: t.nav.alerts, icon: Bell },
     { id: ViewMode.News, label: t.nav.news, icon: Newspaper }
   ];
 
-  const activeMode = viewMode === ViewMode.Profile ? ViewMode.Settings : viewMode;
+  const mobilePrimaryItems = navMenuItems.slice(0, 4);
+  const mobileMoreItems = navMenuItems.slice(4);
+
+  const activeMode = (viewMode as string) === ViewMode.Profile ? ViewMode.Settings : viewMode;
+
+  const renderContent = () => {
+    if (isFetchingData && data.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+           <div className="w-12 h-12 border-4 border-yinmn/20 border-t-yinmn rounded-full animate-spin" />
+           <p className="text-xs font-black uppercase tracking-widest text-slate-400">Syncing with Backend...</p>
+        </div>
+      );
+    }
+    switch (viewMode) {
+      case ViewMode.Dashboard: return <Dashboard data={data} isDarkMode={isDarkMode} t={t.dashboard} lang={language} />;
+      case ViewMode.Analysis: return <AnalysisView data={data} t={t.analysis} lang={language} />;
+      case ViewMode.Economy: return <EconomyView data={data} t={t.economy} lang={language} />;
+      case ViewMode.Historical: return <HistoricalView data={data} t={t.historical} lang={language} />;
+      case ViewMode.Alerts: return <AlertsView alerts={alerts} onAddAlert={(a) => setAlerts([...alerts, a])} onDeleteAlert={(id) => setAlerts(alerts.filter(a => a.id !== id))} t={t} lang={language} />;
+      case ViewMode.News: return <NewsView t={t} />;
+      case ViewMode.PLD: return <PLDView t={t} lang={language} />;
+      case ViewMode.Settings: return <SettingsView theme={theme} setTheme={setTheme} language={language} setLanguage={setLanguage} email={session.email} t={t.settings} onEditProfile={() => setViewMode(ViewMode.Profile)} />;
+      case ViewMode.Profile: return <ProfileView email={session.email} t={t.profile} onBack={() => setViewMode(ViewMode.Settings)} />;
+      default: return <Dashboard data={data} isDarkMode={isDarkMode} t={t.dashboard} lang={language} />;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-floral dark:bg-black transition-colors duration-300">
-      {/* Dynamic Sidebar/Nav for Desktop */}
-      <nav className="glass sticky top-0 z-40 px-4 md:px-6 py-4 pt-safe flex items-center justify-between shadow-sm border-b border-[#375785]/10">
-        <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setViewMode(ViewMode.Dashboard)}>
-          <InfinityLogo className="w-24 h-auto sm:w-32 md:w-40" isDarkMode={isDarkMode} />
+    <div className="min-h-screen bg-[#F2F2F7] dark:bg-black transition-colors duration-500 pb-safe selection:bg-yinmn selection:text-white">
+      <nav className="glass sticky top-0 z-50 px-4 md:px-10 py-4 flex items-center justify-between border-b border-black/5 dark:border-white/5">
+        <div className="flex items-center gap-4">
+          <button onClick={() => setViewMode(ViewMode.Dashboard)} className="hover:opacity-80 active:scale-95 transition-all">
+            <InfinityLogo className="w-32 md:w-44 h-auto" isDarkMode={isDarkMode} />
+          </button>
         </div>
 
-        <div className="flex items-center gap-3 md:gap-6">
-          <div className="hidden lg:flex items-center bg-gray-200/40 dark:bg-night p-1 rounded-2xl border border-gray-300/20">
-            {navMenuItems.map(mode => (
-              <button 
-                key={mode.id}
-                onClick={() => setViewMode(mode.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeMode === mode.id ? 'bg-yinmn text-white shadow-lg shadow-yinmn/30' : 'text-slate-500 hover:text-yinmn dark:text-slate-400 dark:hover:text-white'}`}
-              >
-                <mode.icon className="w-3.5 h-3.5" />
-                {mode.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-4 lg:border-l lg:border-gray-300 lg:dark:border-gray-700 lg:pl-4 relative">
-            <div className="relative">
-              <button 
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="w-10 h-10 rounded-full glass flex items-center justify-center text-yinmn dark:text-white hover:shadow-md transition-all relative group"
-                aria-label={t.notifications.title}
-              >
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse border-2 border-white dark:border-night" />
-                )}
-              </button>
-
-              {showNotifications && (
-                <div className="absolute right-0 mt-4 w-72 sm:w-80 bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-3xl rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.3)] border border-gray-200 dark:border-white/10 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
-                  <div className="p-4 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
-                    <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-yinmn dark:text-white opacity-80">{t.notifications.title}</h4>
-                    <div className="flex gap-3">
-                      <button onClick={markAllRead} className="text-[10px] font-bold text-bondi uppercase tracking-tight hover:opacity-70 transition-opacity">{t.notifications.markRead}</button>
-                      <button onClick={clearNotifications} className="text-[10px] font-bold text-red-500 uppercase tracking-tight hover:opacity-70 transition-opacity">{t.notifications.clear}</button>
-                    </div>
-                  </div>
-                  <div className="max-h-96 overflow-y-auto custom-scrollbar">
-                    {notifications.length === 0 ? (
-                      <div className="py-16 px-6 text-center flex flex-col items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center">
-                          <Bell className="w-6 h-6 text-slate-300 dark:text-slate-600" />
-                        </div>
-                        <p className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">
-                          {t.notifications.empty}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-50 dark:divide-white/5">
-                        {notifications.map(n => (
-                          <div key={n.id} className={`p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors ${!n.read ? 'bg-bondi/5' : ''}`}>
-                            <div className="flex items-start gap-3">
-                              {n.type === 'alert' ? <AlertTriangle className="w-4 h-4 text-red-500 mt-1" /> : <CheckCircle2 className="w-4 h-4 text-blue-500 mt-1" />}
-                              <div className="flex-1">
-                                <p className={`text-xs font-bold ${n.read ? 'text-slate-600 dark:text-slate-300' : 'text-night dark:text-white'}`}>{n.title}</p>
-                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium leading-relaxed">{n.message}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Universal Settings Button */}
-            <button 
-              onClick={() => setViewMode(ViewMode.Settings)}
-              className={`w-10 h-10 rounded-full glass flex items-center justify-center transition-all group ${viewMode === ViewMode.Settings ? 'bg-yinmn text-white shadow-lg' : 'text-yinmn dark:text-white hover:shadow-md'}`}
-              aria-label={t.nav.settings}
+        <div className="hidden lg:flex items-center bg-black/5 dark:bg-white/5 p-1 rounded-[22px] backdrop-blur-3xl shadow-inner border border-black/5 dark:border-white/5">
+          {navMenuItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => { setViewMode(item.id); setIsMoreMenuOpen(false); }}
+              className={`flex items-center gap-2.5 px-6 py-2.5 rounded-[18px] text-[11px] font-black uppercase tracking-widest transition-all duration-300 relative group ${activeMode === item.id ? 'bg-white dark:bg-white/15 text-yinmn dark:text-white shadow-md scale-100' : 'text-slate-500 hover:text-yinmn dark:text-slate-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'}`}
             >
-              <Settings className={`w-5 h-5 ${viewMode === ViewMode.Settings ? 'animate-[spin_4s_linear_infinite]' : ''}`} />
+              <item.icon className={`w-4 h-4 transition-all ${activeMode === item.id ? 'stroke-[2.5px] scale-110' : 'stroke-[1.8px] group-hover:scale-110'}`} />
+              <span className="relative z-10">{item.label}</span>
             </button>
+          ))}
+        </div>
 
-            <button 
-              onClick={() => setViewMode(ViewMode.Profile)}
-              className={`w-10 h-10 rounded-full bg-gradient-to-br from-yinmn to-bondi flex items-center justify-center text-white font-black text-xs shadow-lg hover:scale-105 active:scale-95 transition-all border-2 ${viewMode === ViewMode.Profile ? 'border-white dark:border-night ring-2 ring-yinmn' : 'border-transparent'}`}
-            >
-              {userInitial}
+        <div className="flex items-center gap-2 md:gap-4">
+          <button 
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="w-11 h-11 rounded-full flex items-center justify-center text-yinmn dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 transition-colors relative group"
+          >
+            <Bell className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+            {unreadCount > 0 && <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-black animate-pulse" />}
+          </button>
+          
+          <div className="h-6 w-px bg-black/10 dark:bg-white/10 mx-1 hidden sm:block" />
+
+          <div className="flex items-center bg-black/5 dark:bg-white/5 p-1 rounded-full border border-black/5 dark:border-white/5">
+            <button onClick={() => setViewMode(ViewMode.Settings)} className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${activeMode === ViewMode.Settings ? 'bg-yinmn text-white shadow-sm' : 'text-yinmn dark:text-slate-300 hover:bg-white/50 dark:hover:bg-white/10'}`}>
+              <Settings className={`w-4 h-4 ${activeMode === ViewMode.Settings ? 'animate-spin-slow' : ''}`} />
+            </button>
+            <button onClick={() => setViewMode(ViewMode.Profile)} className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ml-1 ${activeMode === ViewMode.Profile ? 'ring-2 ring-yinmn ring-offset-2 dark:ring-offset-black' : 'hover:scale-105'}`}>
+              <div className="w-full h-full rounded-full bg-gradient-to-br from-yinmn to-bondi flex items-center justify-center text-white font-black text-[10px] shadow-sm">{userInitial}</div>
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Main content with improved bottom padding for floating bar */}
-      <main className="pb-40 lg:pb-16 pt-4 min-h-[calc(100vh-100px)]">
+      <main className="pt-6 pb-32 lg:pb-12 max-w-[1600px] mx-auto min-h-[calc(100vh-80px)]">
         {renderContent()}
       </main>
 
-      {/* Improved Mobile Tab Bar based on Screen Edits */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe px-3 sm:px-4">
-        <div className="bg-white/95 dark:bg-night/95 backdrop-blur-2xl rounded-[32px] border border-slate-200 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] flex justify-between items-center h-20 px-2 mb-4">
-          {navMenuItems.map(item => {
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
+        {isMoreMenuOpen && <div className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsMoreMenuOpen(false)} />}
+        {isMoreMenuOpen && (
+          <div className="absolute bottom-full left-0 right-0 px-4 pb-6 animate-in slide-in-from-bottom-10 duration-500 ease-out">
+            <div className="bg-white/90 dark:bg-[#1c1c1e]/90 backdrop-blur-3xl rounded-[32px] overflow-hidden shadow-[0_24px_50px_-12px_rgba(0,0,0,0.5)] border border-black/5 dark:border-white/10">
+              <div className="p-5 border-b border-black/5 dark:border-white/5 flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-2">Utilities & More</span>
+                <button onClick={() => setIsMoreMenuOpen(false)} className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"><X className="w-4 h-4 text-slate-400" /></button>
+              </div>
+              <div className="p-3 grid grid-cols-2 gap-2">
+                {mobileMoreItems.map(item => (
+                  <button key={item.id} onClick={() => { setViewMode(item.id); setIsMoreMenuOpen(false); }} className={`flex flex-col items-center justify-center gap-3 p-5 rounded-[24px] transition-all active:scale-95 ${viewMode === item.id ? 'bg-yinmn text-white' : 'bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-black/10 dark:hover:bg-white/10'}`}>
+                    <item.icon className={`w-6 h-6 ${viewMode === item.id ? 'stroke-[2.5px]' : 'stroke-[1.8px]'}`} />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="bg-white/80 dark:bg-black/80 backdrop-blur-2xl border-t border-black/5 dark:border-white/10 px-4 pb-safe flex justify-around items-center h-20">
+          {mobilePrimaryItems.map(item => {
             const isActive = activeMode === item.id;
             return (
-              <button 
-                key={item.id} 
-                onClick={() => setViewMode(item.id)} 
-                className={`flex-1 flex flex-col items-center justify-center gap-1.5 transition-all duration-300 ${isActive ? 'text-yinmn dark:text-bondi' : 'text-slate-400 dark:text-slate-600 hover:text-slate-500'}`}
-                aria-label={item.label}
-              >
-                <div className={`p-2 rounded-2xl transition-colors ${isActive ? 'bg-yinmn/5' : ''}`}>
-                  <item.icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px]' : 'stroke-[1.5px]'}`} />
+              <button key={item.id} onClick={() => { setViewMode(item.id); setIsMoreMenuOpen(false); }} className={`flex flex-col items-center justify-center flex-1 h-full gap-1.5 transition-all duration-400 group ${isActive ? 'text-yinmn dark:text-bondi' : 'text-slate-400 dark:text-slate-600'}`}>
+                <div className={`p-1.5 rounded-full transition-all duration-500 ${isActive ? 'bg-yinmn/10 dark:bg-bondi/10 scale-110' : 'group-active:scale-90'}`}>
+                  <item.icon className={`w-[24px] h-[24px] transition-all ${isActive ? 'stroke-[2.5px]' : 'stroke-[1.8px]'}`} />
                 </div>
-                <span className={`text-[9px] font-black uppercase tracking-tighter sm:tracking-widest text-center px-0.5 leading-none ${isActive ? 'opacity-100' : 'opacity-70'}`}>
-                  {item.label}
-                </span>
+                <span className={`text-[9px] font-black uppercase tracking-tighter sm:tracking-widest leading-none ${isActive ? 'opacity-100' : 'opacity-60'}`}>{item.label}</span>
               </button>
             );
           })}
+          <button onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} className={`flex flex-col items-center justify-center flex-1 h-full gap-1.5 transition-all duration-400 group ${isMoreMenuOpen ? 'text-yinmn dark:text-bondi' : 'text-slate-400 dark:text-slate-600'}`}>
+            <div className={`p-1.5 rounded-full transition-all duration-500 ${isMoreMenuOpen ? 'bg-yinmn/10 dark:bg-bondi/10 scale-110 rotate-180' : 'group-active:scale-90'}`}>
+              <MoreHorizontal className={`w-[24px] h-[24px] transition-all ${isMoreMenuOpen ? 'stroke-[2.5px]' : 'stroke-[1.8px]'}`} />
+            </div>
+            <span className={`text-[9px] font-black uppercase tracking-tighter sm:tracking-widest leading-none ${isMoreMenuOpen ? 'opacity-100' : 'opacity-60'}`}>More</span>
+          </button>
         </div>
       </div>
+      <style>{`@keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .animate-spin-slow { animation: spin-slow 8s linear infinite; }`}</style>
     </div>
   );
 };

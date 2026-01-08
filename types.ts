@@ -10,6 +10,7 @@ export interface EnergyRecord {
 export interface UserSession {
   isAuthenticated: boolean;
   email: string | null;
+  token?: string; // JWT/Sanctum Bearer token
   hasAgreedToPolicy: boolean;
   policyVersion: string;
   keepLoggedIn?: boolean;
@@ -46,7 +47,7 @@ export enum ViewMode {
   Historical = 'historical',
   Alerts = 'alerts',
   News = 'news',
-  PLD = 'pld', // New PLD View
+  PLD = 'pld', 
   Settings = 'settings',
   Profile = 'profile'
 }
