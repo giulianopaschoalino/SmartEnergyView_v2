@@ -1,7 +1,6 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { EnergyRecord } from "../types.ts";
-
-// Note: API_KEY is handled externally via process.env.API_KEY.
 
 export const getEnergyInsights = async (data: EnergyRecord[], language: string = 'en') => {
   // Always initialize right before use to ensure the most current environment variables are used.
@@ -30,8 +29,9 @@ export const getEnergyInsights = async (data: EnergyRecord[], language: string =
     Breakdown by source: ${JSON.stringify(summary.sources)}
     
     ${currentContext}
-    Provide 3 concise, actionable bullet points for cost saving and efficiency, following a professional yet encouraging tone suitable for a high-end consumer app. 
-    Use the appropriate currency symbol and formatting for the selected language.
+    Provide 3 concise, actionable bullet points for cost saving and efficiency.
+    Use a professional, high-end corporate tone.
+    Ensure currency formatting matches the selected language.
   `;
 
   try {
@@ -39,7 +39,15 @@ export const getEnergyInsights = async (data: EnergyRecord[], language: string =
       model: 'gemini-3-flash-preview',
       contents: prompt,
     });
-    return response.text;
+
+    // FIX: Manually extract text parts to avoid the 'thoughtSignature' console warning
+    // triggered by the response.text getter when reasoning parts are present.
+    const text = response.candidates?.[0]?.content?.parts
+      ?.filter(part => part.text)
+      ?.map(part => part.text)
+      ?.join('') || '';
+
+    return text;
   } catch (error) {
     console.error("Gemini Error:", error);
     return language === 'pt' ? "Não foi possível gerar insights no momento." : 

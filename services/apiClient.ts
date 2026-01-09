@@ -1,16 +1,15 @@
+
 /**
  * API Client for Smart Energia
- * Integrated with Laravel Sanctum Authentication
+ * Integrated with Laravel Sanctum Authentication and Request Optimization
  */
 
 const BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'https://api.energiasmart.com.br/api';
 
 export class ApiClient {
   private static _token: string | null = null;
+  private static _activeRequests = new Map<string, AbortController>();
 
-  /**
-   * Set the auth token in memory for immediate use
-   */
   static setAuthToken(token: string | null) {
     this._token = token;
   }
@@ -22,7 +21,6 @@ export class ApiClient {
       'X-Requested-With': 'XMLHttpRequest'
     };
     
-    // Prioritize memory token, fallback to storage
     let token = this._token;
     
     if (!token) {
@@ -44,51 +42,69 @@ export class ApiClient {
     return headers;
   }
 
+  /**
+   * Universal fetch with AbortController support to optimize performance
+   */
+  private static async request<T>(endpoint: string, options: RequestInit): Promise<T> {
+    // Optimization: Cancel existing identical request to prevent duplicate loading
+    if (this._activeRequests.has(endpoint)) {
+      this._activeRequests.get(endpoint)?.abort();
+    }
+
+    const controller = new AbortController();
+    this._activeRequests.set(endpoint, controller);
+
+    try {
+      const response = await fetch(`${BASE_URL}${endpoint}`, {
+        ...options,
+        headers: { ...this.getHeaders(), ...options.headers },
+        signal: controller.signal
+      });
+      return await this.handleResponse<T>(response);
+    } finally {
+      this._activeRequests.delete(endpoint);
+    }
+  }
+
   static async get<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
-    return this.handleResponse<T>(response);
+    return this.request<T>(endpoint, { method: 'GET' });
   }
 
   static async post<T>(endpoint: string, body?: any): Promise<T> {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    return this.request<T>(endpoint, {
       method: 'POST',
-      headers: this.getHeaders(),
       body: body ? JSON.stringify(body) : undefined,
     });
-    return this.handleResponse<T>(response);
   }
 
   static async put<T>(endpoint: string, body: any): Promise<T> {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    return this.request<T>(endpoint, {
       method: 'PUT',
-      headers: this.getHeaders(),
       body: JSON.stringify(body),
     });
-    return this.handleResponse<T>(response);
   }
 
   static async delete<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      method: 'DELETE',
-      headers: this.getHeaders(),
-    });
-    return this.handleResponse<T>(response);
+    return this.request<T>(endpoint, { method: 'DELETE' });
   }
 
   private static async handleResponse<T>(response: Response): Promise<T> {
     if (response.status === 401) {
+      this._token = null;
       window.dispatchEvent(new CustomEvent('api-unauthorized'));
     }
     
+    const contentType = response.headers.get("content-type");
+    const isJson = contentType && contentType.includes("application/json");
+    const responseData = isJson ? await response.json().catch(() => ({})) : await response.text();
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || errorData.message || `Request failed with status ${response.status}`);
+      const message = (typeof responseData === 'object') 
+        ? (responseData.error || responseData.message) 
+        : responseData;
+      throw new Error(message || `Request failed with status ${response.status}`);
     }
     
-    const result = await response.json();
-    return (result.data !== undefined ? result.data : result) as T;
+    return (responseData && responseData.data !== undefined ? responseData.data : responseData) as T;
   }
 }

@@ -1,69 +1,100 @@
 
 import React, { useState } from 'react';
+import { Lock, ArrowLeft, ShieldCheck } from 'lucide-react';
 
 interface ProfileViewProps {
+  name?: string;
+  profilePhotoUrl?: string;
   email: string | null;
   t: any;
+  tCommon: any;
   onBack: () => void;
 }
 
-const ProfileView: React.FC<ProfileViewProps> = ({ email, t, onBack }) => {
-  const [name, setName] = useState('User');
-  const [isSaving, setIsSaving] = useState(false);
+const ProfileView: React.FC<ProfileViewProps> = ({ name, profilePhotoUrl, email, t, tCommon, onBack }) => {
+  const [isClosing, setIsClosing] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
-  const handleSave = () => {
-    setIsSaving(true);
+  const handleClose = () => {
+    setIsClosing(true);
     setTimeout(() => {
-      setIsSaving(false);
-    }, 1000);
+      setIsClosing(false);
+      onBack();
+    }, 400);
+  };
+
+  const renderLargeAvatar = () => {
+    const sizeClass = "w-48 h-48";
+    if (profilePhotoUrl && !imgError) {
+      return (
+        <img 
+          src={profilePhotoUrl} 
+          alt={name || "User Profile"} 
+          onError={() => setImgError(true)}
+          className={`${sizeClass} rounded-[48px] object-cover bg-white dark:bg-white/10 border-4 border-white dark:border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.2)] ring-1 ring-black/5`}
+        />
+      );
+    }
+    const initial = (name?.[0] || email?.[0] || 'U').toUpperCase();
+    return (
+      <div className={`${sizeClass} bg-gradient-to-br from-yinmn to-bondi rounded-[48px] flex items-center justify-center text-white text-7xl font-black shadow-[0_30px_60px_rgba(0,0,0,0.2)] ring-1 ring-black/5`}>
+        {initial}
+      </div>
+    );
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center gap-4">
+    <div className={`max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 ${isClosing ? 'animate-out fade-out slide-out-to-bottom-4 duration-400' : 'animate-in fade-in slide-in-from-bottom-4 duration-500'}`}>
+      <div className="flex items-center gap-6">
         <button 
           onClick={onBack}
-          className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-night transition-colors"
+          className="p-3 glass rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 active:scale-90 transition-all text-yinmn dark:text-bondi outline-none"
+          aria-label={t.cancel}
         >
-          <svg className="w-6 h-6 text-[#254F7F] dark:text-bondi" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
+          <ArrowLeft className="w-6 h-6" />
         </button>
         <div>
-          <h2 className="text-3xl font-bold text-night dark:text-white tracking-tight">{t.title}</h2>
-          <p className="text-gray-600 dark:text-gray-400">{t.subtitle}</p>
+          <h2 className="text-3xl font-black text-night dark:text-white tracking-tight leading-tight">{t.title}</h2>
+          <p className="text-slate-600 dark:text-slate-400 font-medium">{t.subtitle}</p>
         </div>
       </div>
 
-      <div className="flex flex-col items-center py-8">
+      <div className="flex flex-col items-center py-6">
         <div className="relative group">
-          <div className="w-32 h-32 bg-gradient-to-br from-yinmn to-bondi rounded-full flex items-center justify-center text-white text-5xl font-bold shadow-xl">
-            {email?.[0]?.toUpperCase() || 'U'}
+          {renderLargeAvatar()}
+          <div className="absolute -bottom-4 -right-4 p-4 bg-white dark:bg-night rounded-2xl shadow-2xl border border-black/5 dark:border-white/10 text-yinmn dark:text-bondi">
+            <ShieldCheck size={28} strokeWidth={2.5} />
           </div>
-          <button className="absolute bottom-0 right-0 p-2 bg-white dark:bg-night rounded-full shadow-lg border border-gray-100 dark:border-white/10 hover:scale-110 transition-transform">
-            <svg className="w-5 h-5 text-yinmn dark:text-bondi" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </button>
         </div>
       </div>
 
       <section className="space-y-4">
-        <h3 className="text-xs font-bold text-yinmn dark:text-gray-400 uppercase tracking-widest ml-1">{t.personalDetails}</h3>
-        <div className="glass rounded-[30px] p-8 space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-night dark:text-white">{t.name}</label>
-            <input 
-              type="text" 
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-5 py-3 bg-white/40 dark:bg-black/20 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-yinmn transition-all text-gray-900 dark:text-white"
-            />
+        <h3 className="text-[11px] font-black text-yinmn dark:text-slate-500 uppercase tracking-widest ml-1">{t.personalDetails}</h3>
+        <div className="glass rounded-[32px] p-8 space-y-8 border border-black/5 dark:border-white/10 shadow-sm">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t.name}</label>
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-black/5 dark:bg-white/5 rounded-full">
+                 <Lock size={10} className="text-slate-400" />
+                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{tCommon.locked}</span>
+              </div>
+            </div>
+            <div className="relative">
+              <input 
+                type="text" 
+                value={name || ''} 
+                readOnly
+                className="w-full px-5 py-4 bg-black/5 dark:bg-black/30 border border-transparent rounded-2xl text-slate-500 dark:text-slate-400 font-bold cursor-not-allowed focus:ring-0 outline-none"
+              />
+              <div className="absolute right-5 top-1/2 -translate-y-1/2">
+                <Lock size={16} className="text-slate-300 dark:text-slate-600" />
+              </div>
+            </div>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-night dark:text-white">{t.email}</label>
-            <div className="w-full px-5 py-3 bg-gray-100/50 dark:bg-black/40 border border-transparent rounded-2xl text-gray-500 cursor-not-allowed">
+          
+          <div className="space-y-3">
+            <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t.email}</label>
+            <div className="w-full px-5 py-4 bg-black/5 dark:bg-black/30 border border-transparent rounded-2xl text-slate-500 dark:text-slate-400 font-bold cursor-not-allowed">
               {email}
             </div>
           </div>
@@ -71,39 +102,31 @@ const ProfileView: React.FC<ProfileViewProps> = ({ email, t, onBack }) => {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-xs font-bold text-yinmn dark:text-gray-400 uppercase tracking-widest ml-1">{t.membership}</h3>
-        <div className="glass rounded-[30px] p-8 flex items-center justify-between bg-gradient-to-r from-yinmn/10 to-transparent">
+        <h3 className="text-[11px] font-black text-yinmn dark:text-slate-500 uppercase tracking-widest ml-1">{t.membership}</h3>
+        <div className="glass rounded-[32px] p-8 flex items-center justify-between bg-gradient-to-r from-yinmn/5 to-transparent border border-yinmn/10 shadow-sm">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 bg-yinmn text-white text-[10px] font-bold rounded uppercase tracking-tighter">Premium</span>
-              <p className="font-bold text-night dark:text-white">Smart Energia Premium</p>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="px-2 py-0.5 bg-yinmn text-white text-[9px] font-black rounded-lg uppercase tracking-widest shadow-sm">Premium</span>
+              <p className="font-black text-night dark:text-white tracking-tight leading-tight">Smart Energia Insight</p>
             </div>
-            <p className="text-sm text-gray-500">{t.membershipDesc}</p>
+            <p className="text-xs text-slate-500 font-medium uppercase tracking-widest leading-relaxed">{t.membershipDesc}</p>
           </div>
-          <div className="w-12 h-12 rounded-full border-2 border-yinmn flex items-center justify-center text-yinmn">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
+          <div className="w-12 h-12 rounded-full border-2 border-yinmn flex items-center justify-center text-yinmn shadow-inner">
+             <ShieldCheck className="w-6 h-6" />
           </div>
         </div>
       </section>
 
-      <div className="flex gap-4 pt-4">
+      <div className="flex flex-col sm:flex-row gap-4 pt-6">
         <button 
-          onClick={handleSave}
-          disabled={isSaving}
-          className="flex-1 py-4 bg-yinmn text-white font-bold rounded-2xl hover:bg-[#2a4365] active:scale-[0.98] transition-all shadow-xl shadow-yinmn/20 flex items-center justify-center gap-2"
+          onClick={handleClose}
+          className="flex-1 py-5 bg-yinmn text-white font-black text-xs uppercase tracking-[0.2em] rounded-[24px] hover:bg-[#2a4365] active:scale-[0.98] transition-all shadow-xl shadow-yinmn/30"
         >
-          {isSaving ? (
-             <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-             </svg>
-          ) : t.save}
+          {t.save}
         </button>
         <button 
           onClick={onBack}
-          className="flex-1 py-4 glass text-night dark:text-white font-bold rounded-2xl hover:bg-gray-100 dark:hover:bg-white/5 active:scale-[0.98] transition-all border border-gray-200 dark:border-white/10"
+          className="flex-1 py-5 glass text-slate-600 dark:text-slate-300 font-black text-xs uppercase tracking-[0.2em] rounded-[24px] hover:bg-black/5 dark:hover:bg-white/5 active:scale-[0.98] transition-all border border-black/5 dark:border-white/10"
         >
           {t.cancel}
         </button>

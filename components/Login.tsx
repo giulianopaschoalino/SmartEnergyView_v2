@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
 import InfinityLogo from './InfinityLogo.tsx';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface LoginProps {
   onLogin: (email: string, keepLoggedIn: boolean) => void;
@@ -15,6 +17,8 @@ const Login: React.FC<LoginProps> = ({ onRealLogin, isDarkMode = false, t }) => 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [name, setName] = useState('');
   const [keepLoggedIn, setKeepLoggedIn] = useState(false);
   const [resetSent, setResetSent] = useState(false);
@@ -26,23 +30,43 @@ const Login: React.FC<LoginProps> = ({ onRealLogin, isDarkMode = false, t }) => 
         onRealLogin(email, password, keepLoggedIn);
       }
     } else if (mode === 'signup') {
-      // Signup implementation would hit UserController@store
+      // Signup implementation
     } else if (mode === 'reset') {
-      // Reset implementation would hit ForgotPasswordController
+      // Reset implementation
     }
   };
 
   const switchMode = (newMode: LoginMode) => {
     setResetSent(false);
     setMode(newMode);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
   };
+
+  const PasswordToggle = ({ visible, onToggle }: { visible: boolean; onToggle: () => void }) => (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl text-slate-400 hover:text-yinmn dark:hover:text-bondi hover:bg-slate-100/50 dark:hover:bg-white/5 transition-all active:scale-90 focus:outline-none"
+      aria-label={visible ? "Hide password" : "Show password"}
+    >
+      <div className="relative w-5 h-5 flex items-center justify-center">
+        <div className={`absolute transition-all duration-300 transform ${visible ? 'opacity-0 scale-75 rotate-45' : 'opacity-100 scale-100 rotate-0'}`}>
+          <Eye size={18} strokeWidth={2.5} />
+        </div>
+        <div className={`absolute transition-all duration-300 transform ${visible ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-75 -rotate-45'}`}>
+          <EyeOff size={18} strokeWidth={2.5} />
+        </div>
+      </div>
+    </button>
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-floral dark:bg-black px-4 transition-colors duration-300">
       <div className="w-full max-w-md glass rounded-4xl p-8 sm:p-10 shadow-2xl animate-in fade-in zoom-in-95 duration-500">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <InfinityLogo className="w-64 h-auto" isDarkMode={isDarkMode} />
+            <InfinityLogo className="w-32 h-auto" isDarkMode={isDarkMode} />
           </div>
           <p className="text-slate-600 dark:text-slate-400 mt-2 text-sm font-medium tracking-wide">
             {mode === 'signin' ? t.subtitle : mode === 'signup' ? t.signUpSubtitle : t.resetSubtitle}
@@ -89,28 +113,34 @@ const Login: React.FC<LoginProps> = ({ onRealLogin, isDarkMode = false, t }) => 
             {mode !== 'reset' && (
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest ml-1">{t.credentials}</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-5 py-3.5 bg-white/40 dark:bg-night border border-slate-300 dark:border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-yinmn transition-all text-night dark:text-white placeholder:text-slate-400"
-                  placeholder={t.placeholderPassword}
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-5 pr-12 py-3.5 bg-white/40 dark:bg-night border border-slate-300 dark:border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-yinmn transition-all text-night dark:text-white placeholder:text-slate-400"
+                    placeholder={t.placeholderPassword}
+                    required
+                  />
+                  <PasswordToggle visible={showPassword} onToggle={() => setShowPassword(!showPassword)} />
+                </div>
               </div>
             )}
 
             {mode === 'signup' && (
               <div className="space-y-1.5 animate-in slide-in-from-top-4">
                 <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest ml-1">{t.confirmPassword}</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-5 py-3.5 bg-white/40 dark:bg-night border border-slate-300 dark:border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-yinmn transition-all text-night dark:text-white placeholder:text-slate-400"
-                  placeholder={t.placeholderPassword}
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full pl-5 pr-12 py-3.5 bg-white/40 dark:bg-night border border-slate-300 dark:border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-yinmn transition-all text-night dark:text-white placeholder:text-slate-400"
+                    placeholder={t.placeholderPassword}
+                    required
+                  />
+                  <PasswordToggle visible={showConfirmPassword} onToggle={() => setShowConfirmPassword(!showConfirmPassword)} />
+                </div>
               </div>
             )}
 

@@ -1,707 +1,489 @@
+
 export const translations = {
   en: {
     nav: {
       dashboard: 'Overview',
-      analysis: 'Logs',
       economy: 'Economy',
-      historical: 'History',
-      alerts: 'Alerts',
+      telemetry: 'Telemetry',
+      operation_summary: 'Ops Summary',
       news: 'News',
       pld: 'PLD Price',
+      sectorial_info: 'Sector Info',
+      notifications: 'Notifications',
+      about_us: 'About Us',
+      faq: 'FAQ',
       settings: 'Settings',
       premium: 'Premium',
-      logout: 'Logout'
+      logout: 'Log Out'
     },
-    pld: {
-      title: 'Market Price (PLD)',
-      subtitle: 'Real-time hourly liquidation prices from CCEE',
-      regions: {
-        SUL: 'South',
-        SE_CO: 'SE / Central-West',
-        N: 'North',
-        NE: 'Northeast'
-      },
-      currentPrice: 'Current Price',
-      hourlyTrend: 'Hourly Price Trend (R$/MWh)',
-      subregions: 'Sub-regions',
-      lastUpdate: 'Source: CCEE Open Data API',
-      loading: 'Fetching market data...',
-      error: 'Unable to connect to CCEE servers.'
-    },
-    alerts: {
-      title: 'Usage Alerts',
-      subtitle: 'Set custom thresholds for your energy monitoring',
-      create: 'Create New Alert',
-      type: 'Alert Type',
-      usage: 'Consumption (kWh)',
-      cost: 'Cost',
-      condition: 'Condition',
-      greater: 'Is greater than',
-      less: 'Is less than',
-      threshold: 'Threshold Value',
-      source: 'Energy Source',
-      save: 'Activate Alert',
-      active: 'Active Alerts',
-      noAlerts: 'No alerts configured yet.',
-      delete: 'Delete',
-      triggered: 'Alert Triggered',
-      notificationTitle: 'Threshold Reached',
-      usageExceeded: 'Your energy consumption of {val} kWh exceeded your limit.',
-      costExceeded: 'Your energy cost of {val} reached your set limit.'
-    },
-    notifications: {
-      title: 'Notifications',
-      empty: 'No new notifications',
-      markRead: 'Mark all as read',
-      clear: 'Clear all'
-    },
-    login: {
-      subtitle: 'Sophisticated energy monitoring',
-      identity: 'Identity',
-      credentials: 'Credentials',
-      placeholderEmail: 'name@example.com',
-      placeholderPassword: '••••••••',
-      keepLoggedIn: 'Keep me logged in',
-      signIn: 'Sign In',
-      recovery: 'Secure Recovery Access',
-      createAccount: 'Create Account',
-      newHere: 'New to Smart Energia?',
-      alreadyHaveAccount: 'Already have an account?',
-      fullName: 'Full Name',
-      placeholderName: 'John Doe',
-      confirmPassword: 'Confirm Password',
-      sendReset: 'Send Reset Instructions',
-      backToSignIn: 'Back to Sign In',
-      resetTitle: 'Password Recovery',
-      resetSubtitle: 'Enter your email to receive instructions',
-      resetSuccess: 'Instructions sent! Please check your inbox.',
-      signUpTitle: 'Join Smart Energia',
-      signUpSubtitle: 'Start your journey to energy efficiency'
-    },
-    policy: {
-      title: 'Terms and Conditions',
-      lastUpdated: 'Last updated: October 2023',
-      intro: 'Welcome to Smart Energia. By using this application, you agree to our processing of your energy consumption data to provide insights and visualizations.',
-      point1Title: 'Data Collection:',
-      point1Desc: 'We collect energy usage metrics from your smart meters to calculate costs and provide efficiency recommendations.',
-      point2Title: 'Privacy:',
-      point2Desc: 'Your data is encrypted and stored securely. We do not sell your personal data to third parties.',
-      point3Title: 'AI Insights:',
-      point3Desc: 'This app uses advanced language models to provide suggestions. These are recommendations only and should be verified with a certified energy auditor.',
-      point4Title: 'Account Security:',
-      point4Desc: 'You are responsible for maintaining the confidentiality of your login credentials.',
-      agreeNote: 'By clicking "Agree", you accept these terms in their entirety. If you do not agree, you will not be able to access the dashboard features.',
-      agree: 'Agree and Continue',
-      disagree: "Don't Agree"
-    },
-    dashboard: {
-      title: 'Overview',
-      subtitle: 'Your energy performance at a glance',
-      source: 'Source',
-      sources: {
-        All: 'All',
-        Solar: 'Solar',
-        Grid: 'Grid',
-        Battery: 'Battery'
-      },
-      stats: {
-        usage: 'Total Usage',
-        cost: 'Estimated Cost',
-        avg: 'Avg. Consumption',
-        economyTitle: 'Free Market Economy'
-      },
-      charts: {
-        usageTrend: 'Usage Trend',
-        costDist: 'Cost Distribution',
-        annualTrend: 'Annual Economy Trend',
-        costVsFree: 'Cost vs. Free Market',
-        captive: 'Captive',
-        free: 'Free',
-        economy: 'Economy'
-      },
-      ai: {
-        title: 'AI Efficiency Insights',
-        subtitle: 'Personalized recommendations by Gemini',
-        refresh: 'Refresh Insights',
-        loading: 'Refining...',
-        default: 'Generating insights for your energy profile...',
-        error: 'Unable to generate insights at this time.'
-      }
-    },
-    economy: {
-      title: 'Market Economy',
-      subtitle: 'Savings generated by the Free Energy Market',
-      accumulated: 'Accumulated Economy',
-      monthly: 'This Month',
-      annually: 'Annual Total',
-      ytd: 'Year-to-Date (YTD)',
-      breakdown: 'Cost Breakdown Details',
-      comparison: 'Captive vs. Free Market Cost',
-      labels: {
-        captive: 'Captive (Regulated)',
-        free: 'Actual (Free Market)',
-        savings: 'Net Savings'
-      },
-      charts: {
-        summary: 'Economy Summary',
-        historical: 'Historical',
-        projection: 'Projection',
-        trend: 'Annual Savings Trend',
-        estimated: 'Estimated Savings'
-      },
-      percentage: 'Total Saving Rate',
-      details: 'Based on a comparative analysis of regulated tariffs in your region.',
-      projectionDisclaimer: '* Projections based on current performance and free energy market trends.'
-    },
-    historical: {
-      title: 'Consumption History',
-      subtitle: 'Compare multi-year energy performance',
-      compareByYear: 'Compare by Year',
-      sources: 'Sources',
-      chartTitle: 'Monthly Usage Comparison',
-      stats: {
-        highestYear: 'Most Efficient Year',
-        totalKWh: 'Total Historical Consumption',
-        yearOnYear: 'Year-over-Year Trend'
-      }
-    },
-    analysis: {
-      title: 'Data Analysis',
-      subtitle: 'Deep dive into your consumption logs',
-      export: 'Export CSV',
-      filters: {
-        start: 'Start Date',
-        end: 'End Date',
-        source: 'Energy Source',
-        allSources: 'All Sources'
-      },
-      table: {
-        date: 'Date',
-        source: 'Source',
-        usage: 'Usage (kWh)',
-        cost: 'Actual Cost'
-      }
-    },
-    news: {
-      title: 'Latest News',
-      subtitle: 'Updates from the world of sustainable energy',
-      article: 'Article',
-      by: 'By',
-      retry: 'Retry Loading',
-      error: 'Unable to load news at this time. Please try again later.',
-      viewAll: 'Explore Full Portal',
-      archive: 'Access our full archive of hundreds of articles and exclusive analyses.',
-      accessNow: 'Access Now',
-      localEnd: 'You have seen all recent updates.',
-      processing: 'Processing...',
-      scrollForMore: 'Scroll to discover more'
+    common: {
+      all: 'All',
+      units: 'Units',
+      date: 'Date',
+      loading: 'Loading...',
+      noData: 'No data available.',
+      download: 'Download',
+      back: 'Back',
+      verified: 'Verified by Provider',
+      locked: 'Identity Locked'
     },
     settings: {
       title: 'Settings',
-      subtitle: 'Manage your account and app preferences',
+      subtitle: 'Manage account & preferences',
       profile: 'Account Profile',
-      premium: 'Premium Plan Subscriber',
-      edit: 'Edit',
+      premium: 'Premium Subscriber',
+      edit: 'Manage',
+      accountID: 'Account Identifier',
+      identityNotice: 'Managed by central provider',
       appearance: 'Appearance',
       theme: 'Theme Preference',
-      themeDesc: 'Choose how Smart Energia looks to you',
+      themeDesc: 'Choose your visual style',
       language: 'Language',
-      languageDesc: 'Select your preferred language',
+      languageDesc: 'Preferred app language',
       notifications: 'Notifications',
       alerts: 'Usage Alerts',
-      alertsDesc: 'Get notified when consumption exceeds daily average',
+      alertsDesc: 'Notify when over limit',
       summary: 'Weekly Summary',
-      summaryDesc: 'Receive a detailed cost report every Monday',
-      privacy: 'Privacy & Security',
-      changePassword: 'Change Password',
-      changePasswordDesc: 'Update your security credentials',
-      twoFactor: 'Two-Factor Authentication',
-      twoFactorStatus: 'Enabled • Protecting your data',
-      clearCache: 'Clear Local Cache',
-      clearCacheDesc: 'Remove all stored data on this device',
-      build: 'Build'
+      summaryDesc: 'Monday cost reports',
+      logout: 'Log Out'
     },
     profile: {
       title: 'My Profile',
-      subtitle: 'Personal information and membership',
+      subtitle: 'Verified information',
       personalDetails: 'Personal Details',
-      name: 'Name',
-      email: 'Email',
-      membership: 'Membership',
-      membershipDesc: 'Premium Member since 2023',
-      save: 'Save Changes',
-      cancel: 'Cancel',
-      back: 'Back'
+      name: 'Legal Name',
+      email: 'Email Address',
+      membership: 'Plan Status',
+      membershipDesc: 'Active since 2023',
+      save: 'Close',
+      cancel: 'Back'
+    },
+    dashboard: {
+      title: 'Overview',
+      subtitle: 'Performance at a glance',
+      source: 'Source',
+      sources: { All: 'All', Solar: 'Solar', Grid: 'Grid', Battery: 'Battery' },
+      stats: { usage: 'Usage', cost: 'Cost', avg: 'Avg', economyTitle: 'Economy' },
+      charts: { usageTrend: 'Usage Trend', costVsFree: 'Cost vs Market', captive: 'Captive', free: 'Free', economy: 'Economy' },
+      ai: { title: 'AI Insights', subtitle: 'Gemini Analysis', refresh: 'Update', loading: 'Thinking...', default: 'Awaiting data...' }
+    },
+    economy: {
+      title: 'Economic Performance',
+      subtitle: 'Analyze your savings and market trends',
+      tabs: {
+        annual: 'Annual Gross',
+        monthly: 'Monthly Gross',
+        captiveVsFree: 'Captive vs Free',
+        costMWh: 'Cost per MWh'
+      }
+    },
+    telemetry: {
+      title: 'Telemetry',
+      subtitle: 'Real-time consumption and technical data',
+      tabs: {
+        consumption: 'Consumption',
+        demand: 'Demand',
+        powerFactor: 'Power Factor'
+      },
+      filters: {
+        discretization: 'Resolution'
+      }
+    },
+    ops: {
+      title: 'Operation Summary',
+      subtitle: 'Market transactions and contracts',
+      table: {
+        month: 'Month',
+        unit: 'Unit',
+        op: 'Operation',
+        counterparty: 'Counterparty',
+        amount: 'Amount',
+        price: 'Price',
+        total: 'Total Value'
+      }
+    },
+    news: {
+      title: 'Energy News',
+      subtitle: 'Stay updated with sector trends',
+      article: 'Article',
+      by: 'By',
+      processing: 'Loading news...',
+      scrollForMore: 'Scroll for more'
+    },
+    sector: {
+      title: 'Sectorial Information',
+      subtitle: 'Download reports and regulatory updates',
+      downloadBtn: 'Download Report'
+    },
+    pld: {
+      title: 'PLD Price',
+      subtitle: 'Market Clearing Price monitoring',
+      loading: 'Loading price data...',
+      tabs: {
+        history: 'Historical',
+        daily: 'Daily',
+        hourly: 'Hourly'
+      }
+    },
+    login: {
+      subtitle: 'Welcome back to Smart Energia',
+      signUpSubtitle: 'Join our energy efficiency network',
+      resetSubtitle: 'Recover your account access',
+      resetSuccess: 'Password reset link sent to your email',
+      fullName: 'Full Name',
+      placeholderName: 'John Doe',
+      identity: 'Email Address',
+      placeholderEmail: 'email@example.com',
+      credentials: 'Password',
+      placeholderPassword: '••••••••',
+      confirmPassword: 'Confirm Password',
+      keepLoggedIn: 'Keep me logged in',
+      recovery: 'Forgot password?',
+      signIn: 'Sign In',
+      createAccount: 'Create Account',
+      sendReset: 'Send Reset Link',
+      newHere: 'New to Smart Energia?',
+      alreadyHaveAccount: 'Already have an account?'
+    },
+    policy: {
+      lastUpdated: 'October 2023',
+      title: 'Privacy & Terms',
+      intro: 'We value your data privacy and security. By using our platform, you agree to our data handling practices.',
+      point1Title: 'Efficiency First',
+      point1Desc: 'We use your data to optimize energy consumption and reduce costs.',
+      point2Title: 'Secure Storage',
+      point2Desc: 'Your information is encrypted and stored in secure data centers.',
+      point3Title: 'Data Control',
+      point3Desc: 'You have full control over your telemetry history and preferences.',
+      point4Title: 'Compliance',
+      point4Desc: 'We follow LGPD and international privacy standards.',
+      agreeNote: 'By clicking agree, you confirm that you have read and accepted our Terms of Use and Privacy Policy.',
+      agree: 'I Agree',
+      disagree: 'I Disagree'
     }
   },
   pt: {
     nav: {
       dashboard: 'Visão Geral',
-      analysis: 'Registros',
       economy: 'Economia',
-      historical: 'Histórico',
-      alerts: 'Alertas',
+      telemetry: 'Telemetria',
+      operation_summary: 'Resumo Op.',
       news: 'Notícias',
       pld: 'Preço PLD',
+      sectorial_info: 'Info Setorial',
+      notifications: 'Notificações',
+      about_us: 'Sobre Nós',
+      faq: 'FAQ',
       settings: 'Ajustes',
       premium: 'Premium',
       logout: 'Sair'
     },
-    pld: {
-      title: 'Preço de Mercado (PLD)',
-      subtitle: 'Preços horários de liquidação em tempo real (CCEE)',
-      regions: {
-        SUL: 'Sul',
-        SE_CO: 'SE / Centro-Oeste',
-        N: 'Norte',
-        NE: 'Nordeste'
-      },
-      currentPrice: 'Preço Atual',
-      hourlyTrend: 'Tendência Horária (R$/MWh)',
-      subregions: 'Sub-regiões',
-      lastUpdate: 'Fonte: Dados Abertos CCEE',
-      loading: 'Buscando dados de mercado...',
-      error: 'Erro ao conectar aos servidores da CCEE.'
-    },
-    alerts: {
-      title: 'Alertas de Uso',
-      subtitle: 'Defina limites personalizados para seu monitoramento',
-      create: 'Criar Novo Alerta',
-      type: 'Tipo de Alerta',
-      usage: 'Consumo (kWh)',
-      cost: 'Custo',
-      condition: 'Condição',
-      greater: 'É maior que',
-      less: 'É menor que',
-      threshold: 'Valor do Limite',
-      source: 'Fonte de Energia',
-      save: 'Ativar Alerta',
-      active: 'Alertas Ativos',
-      noAlerts: 'Nenhum alerta configurado.',
-      delete: 'Excluir',
-      triggered: 'Alerta Disparado',
-      notificationTitle: 'Limite Atingido',
-      usageExceeded: 'Seu consumo de energia de {val} kWh excedeu seu limite.',
-      costExceeded: 'Seu custo de energia de {val} atingiu o limite definido.'
-    },
-    notifications: {
-      title: 'Notificações',
-      empty: 'Sem novas notificações',
-      markRead: 'Marcar todas como lidas',
-      clear: 'Limpar tudo'
-    },
-    login: {
-      subtitle: 'Monitoramento sofisticado de energia',
-      identity: 'Identidade',
-      credentials: 'Senha',
-      placeholderEmail: 'nome@exemplo.com',
-      placeholderPassword: '••••••••',
-      keepLoggedIn: 'Manter conectado',
-      signIn: 'Entrar',
-      recovery: 'Recuperação de Acesso Segura',
-      createAccount: 'Criar Conta',
-      newHere: 'Novo na Smart Energia?',
-      alreadyHaveAccount: 'Já possui uma conta?',
-      fullName: 'Nome Completo',
-      placeholderName: 'João Silva',
-      confirmPassword: 'Confirmar Senha',
-      sendReset: 'Enviar Instruções',
-      backToSignIn: 'Voltar ao Login',
-      resetTitle: 'Recuperação de Senha',
-      resetSubtitle: 'Insira seu e-mail para receber as instruções',
-      resetSuccess: 'Instruções enviadas! Verifique sua caixa de entrada.',
-      signUpTitle: 'Junte-se à Smart Energia',
-      signUpSubtitle: 'Comece sua jornada para a eficiência energética'
-    },
-    policy: {
-      title: 'Termos e Condições',
-      lastUpdated: 'Última atualização: Outubro 2023',
-      intro: 'Bem-vindo à Smart Energia. Ao usar este aplicativo, você concorda com o processamento de seus dados de consumo de energia para fornecer insights e visualizações.',
-      point1Title: 'Coleta de Dados:',
-      point1Desc: 'Coletamos métricas de uso de energia de seus medidores inteligentes para calcular custos e fornecer recomendações de eficiência.',
-      point2Title: 'Privacidade:',
-      point2Desc: 'Seus dados são criptografados e armazenados com segurança. Não vendemos seus dados pessoais a terceiros.',
-      point3Title: 'Insights de IA:',
-      point3Desc: 'Este aplicativo usa modelos de linguagem avançados para fornecer sugestões. Estas são apenas recomendações e devem ser verificadas com um auditor de energia certificado.',
-      point4Title: 'Segurança da Conta:',
-      point4Desc: 'Você é responsável por manter a confidencialidade de suas credenciais de acesso.',
-      agreeNote: 'Ao clicar em "Concordo", você aceita estes termos em sua totalidade. Se não concordar, não poderá acessar os recursos do painel.',
-      agree: 'Concordar e Continuar',
-      disagree: 'Não Concordo'
-    },
-    dashboard: {
-      title: 'Visão Geral',
-      subtitle: 'Seu desempenho energético em um relance',
-      source: 'Fonte',
-      sources: {
-        All: 'Todas',
-        Solar: 'Solar',
-        Grid: 'Rede',
-        Battery: 'Bateria'
-      },
-      stats: {
-        usage: 'Uso Total',
-        cost: 'Custo Estimado',
-        avg: 'Consumo Médio',
-        economyTitle: 'Economia Mercado Livre'
-      },
-      charts: {
-        usageTrend: 'Tendência de Uso',
-        costDist: 'Distribuição de Custos',
-        annualTrend: 'Tendência de Economia Anual',
-        costVsFree: 'Custo vs. Mercado Livre',
-        captive: 'Cativo',
-        free: 'Livre',
-        economy: 'Economia'
-      },
-      ai: {
-        title: 'Insights de Eficiência IA',
-        subtitle: 'Recomendações personalizadas pelo Gemini',
-        refresh: 'Atualizar Insights',
-        loading: 'Refinando...',
-        default: 'Gerando insights para seu perfil de energia...',
-        error: 'Não foi possível gerar insights no momento.'
-      }
-    },
-    economy: {
-      title: 'Economia de Mercado',
-      subtitle: 'Ganhos gerados pelo Mercado Livre de Energia',
-      accumulated: 'Economia Acumulada',
-      monthly: 'Neste Mês',
-      annually: 'Total Anual',
-      ytd: 'Acumulado no Ano (YTD)',
-      breakdown: 'Detalhamento de Custos',
-      comparison: 'Custo Cativo vs. Mercado Livre',
-      labels: {
-        captive: 'Cativo (Regulado)',
-        free: 'Atual (Mercado Livre)',
-        savings: 'Economia Líquida'
-      },
-      charts: {
-        summary: 'Resumo de Economia',
-        historical: 'Histórico',
-        projection: 'Projeção',
-        trend: 'Tendência de Economia Anual',
-        estimated: 'Economia Estimada'
-      },
-      percentage: 'Taxa de Economia',
-      details: 'Baseado na análise comparativa de tarifas reguladas da sua região.',
-      projectionDisclaimer: '* Projeções baseadas no desempenho atual e tendências do mercado livre.'
-    },
-    historical: {
-      title: 'Histórico de Consumo',
-      subtitle: 'Compare o desempenho energético de vários anos',
-      compareByYear: 'Comparar por Ano',
-      sources: 'Fontes',
-      chartTitle: 'Comparação de Uso Mensual',
-      stats: {
-        highestYear: 'Ano Mais Eficiente',
-        totalKWh: 'Consumo Histórico Total',
-        yearOnYear: 'Tendência Ano a Ano'
-      }
-    },
-    analysis: {
-      title: 'Análise de Dados',
-      subtitle: 'Mergulhe fundo nos seus registros de consumo',
-      export: 'Exportar CSV',
-      filters: {
-        start: 'Data Inicial',
-        end: 'Data Final',
-        source: 'Fonte de Energia',
-        allSources: 'Todas as Fontes'
-      },
-      table: {
-        date: 'Data',
-        source: 'Fonte',
-        usage: 'Uso (kWh)',
-        cost: 'Custo Real'
-      }
-    },
-    news: {
-      title: 'Últimas Notícias',
-      subtitle: 'Atualizações do mundo da energia sustentável',
-      article: 'Artigo',
-      by: 'Por',
-      retry: 'Tentar Novamente',
-      error: 'Não foi possível carregar as notícias. Tente novamente mais tarde.',
-      viewAll: 'Explorar Portal Completo',
-      archive: 'Acesse nosso arquivo completo com centenas de artigos e análises exclusivas.',
-      accessNow: 'Acessar Agora',
-      localEnd: 'Você viu todas as atualizações recentes.',
-      processing: 'Processando...',
-      scrollForMore: 'Role para descobrir mais'
+    common: {
+      all: 'Todas',
+      units: 'Unidades',
+      date: 'Data',
+      loading: 'Carregando...',
+      noData: 'Sem dados.',
+      download: 'Baixar',
+      back: 'Voltar',
+      verified: 'Verificado pelo Provedor',
+      locked: 'Identidade Bloqueada'
     },
     settings: {
-      title: 'Configurações',
-      subtitle: 'Gerencie sua conta e preferências do app',
+      title: 'Ajustes',
+      subtitle: 'Gerencie conta e preferências',
       profile: 'Perfil da Conta',
-      premium: 'Assinante Plano Premium',
-      edit: 'Editar',
+      premium: 'Assinante Premium',
+      edit: 'Gerenciar',
+      accountID: 'Identificador da Conta',
+      identityNotice: 'Gerenciado pelo provedor central',
       appearance: 'Aparência',
       theme: 'Preferência de Tema',
-      themeDesc: 'Escolha como a Smart Energia aparece para você',
+      themeDesc: 'Escolha seu estilo visual',
       language: 'Idioma',
-      languageDesc: 'Selecione seu idioma preferido',
+      languageDesc: 'Idioma preferido do app',
       notifications: 'Notificações',
       alerts: 'Alertas de Uso',
-      alertsDesc: 'Seja notificado quando o consumo exceder a média diária',
+      alertsDesc: 'Avisar quando exceder limite',
       summary: 'Resumo Semanal',
-      summaryDesc: 'Receba um relatório de custos detalhado toda segunda-feira',
-      privacy: 'Privacidade e Segurança',
-      changePassword: 'Alterar Senha',
-      changePasswordDesc: 'Atualize suas credenciais de segurança',
-      twoFactor: 'Autenticação de Dois Fatores',
-      twoFactorStatus: 'Ativado • Protegendo seus dados',
-      clearCache: 'Limpar Cache Local',
-      clearCacheDesc: 'Remova todos os dados armazenados neste dispositivo',
-      build: 'Versão'
+      summaryDesc: 'Relatórios de custo toda segunda',
+      logout: 'Sair da Conta'
     },
     profile: {
       title: 'Meu Perfil',
-      subtitle: 'Informações pessoais e assinatura',
+      subtitle: 'Informações verificadas',
       personalDetails: 'Detalhes Pessoais',
-      name: 'Nome',
-      email: 'E-mail',
-      membership: 'Assinatura',
-      membershipDesc: 'Membro Premium desde 2023',
-      save: 'Salvar Alterações',
-      cancel: 'Cancelar',
-      back: 'Voltar'
+      name: 'Nome Legal',
+      email: 'Endereço de E-mail',
+      membership: 'Status do Plano',
+      membershipDesc: 'Ativo desde 2023',
+      save: 'Fechar',
+      cancel: 'Voltar'
+    },
+    dashboard: {
+      title: 'Visão Geral',
+      subtitle: 'Desempenho em um relance',
+      source: 'Fonte',
+      sources: { All: 'Todas', Solar: 'Solar', Grid: 'Rede', Battery: 'Bateria' },
+      stats: { usage: 'Uso', cost: 'Custo', avg: 'Média', economyTitle: 'Economia' },
+      charts: { usageTrend: 'Tendência de Uso', costVsFree: 'Custo x Mercado', captive: 'Cativo', free: 'Livre', economy: 'Economia' },
+      ai: { title: 'Insights de IA', subtitle: 'Análise Gemini', refresh: 'Atualizar', loading: 'Pensando...', default: 'Aguardando dados...' }
+    },
+    economy: {
+      title: 'Desempenho Econômico',
+      subtitle: 'Analise suas economias e tendências de mercado',
+      tabs: {
+        annual: 'Bruto Anual',
+        monthly: 'Bruto Mensal',
+        captiveVsFree: 'Cativo x Livre',
+        costMWh: 'Custo por MWh'
+      }
+    },
+    telemetry: {
+      title: 'Telemetria',
+      subtitle: 'Consumo em tempo real e dados técnicos',
+      tabs: {
+        consumption: 'Consumo',
+        demand: 'Demanda',
+        powerFactor: 'Fator de Potência'
+      },
+      filters: {
+        discretization: 'Resolução'
+      }
+    },
+    ops: {
+      title: 'Resumo de Operações',
+      subtitle: 'Transações de mercado e contratos',
+      table: {
+        month: 'Mês',
+        unit: 'Unidade',
+        op: 'Operação',
+        counterparty: 'Contraparte',
+        amount: 'Montante',
+        price: 'Preço',
+        total: 'Valor Total'
+      }
+    },
+    news: {
+      title: 'Notícias do Setor',
+      subtitle: 'Fique atualizado com as tendências do mercado',
+      article: 'Artigo',
+      by: 'Por',
+      processing: 'Carregando notícias...',
+      scrollForMore: 'Role para mais'
+    },
+    sector: {
+      title: 'Informação Setorial',
+      subtitle: 'Baixe relatórios e atualizações regulatórias',
+      downloadBtn: 'Baixar Relatório'
+    },
+    pld: {
+      title: 'Preço PLD',
+      subtitle: 'Monitoramento do Preço de Liquidação das Diferenças',
+      loading: 'Carregando dados de preços...',
+      tabs: {
+        history: 'Histórico',
+        daily: 'Diário',
+        hourly: 'Horário'
+      }
+    },
+    login: {
+      subtitle: 'Bem-vindo de volta à Smart Energia',
+      signUpSubtitle: 'Junte-se à nossa rede de eficiência energética',
+      resetSubtitle: 'Recupere o acesso à sua conta',
+      resetSuccess: 'Link de redefinição de senha enviado ao seu e-mail',
+      fullName: 'Nome Completo',
+      placeholderName: 'João Silva',
+      identity: 'Endereço de E-mail',
+      placeholderEmail: 'email@exemplo.com.br',
+      credentials: 'Senha',
+      placeholderPassword: '••••••••',
+      confirmPassword: 'Confirmar Senha',
+      keepLoggedIn: 'Manter-me conectado',
+      recovery: 'Esqueceu a senha?',
+      signIn: 'Entrar',
+      createAccount: 'Criar Conta',
+      sendReset: 'Enviar Link',
+      newHere: 'Novo na Smart Energia?',
+      alreadyHaveAccount: 'Já possui uma conta?'
+    },
+    policy: {
+      lastUpdated: 'Outubro de 2023',
+      title: 'Privacidade e Termos',
+      intro: 'Valorizamos a privacidade e segurança dos seus dados. Ao usar nossa plataforma, você concorda com nossas práticas de tratamento de dados.',
+      point1Title: 'Eficiência Primeiro',
+      point1Desc: 'Usamos seus dados para otimizar o consumo de energia e reduzir custos.',
+      point2Title: 'Armazenamento Seguro',
+      point2Desc: 'Suas informações são criptografadas e armazenadas em servidores seguros.',
+      point3Title: 'Controle de Dados',
+      point3Desc: 'Você tem controle total sobre seu histórico de telemetria e preferências.',
+      point4Title: 'Conformidade',
+      point4Desc: 'Seguimos a LGPD e padrões internacionais de privacidade.',
+      agreeNote: 'Ao clicar em concordar, você confirma que leu e aceitou nossos Termos de Uso e Política de Privacidade.',
+      agree: 'Eu Concordo',
+      disagree: 'Não Concordo'
     }
   },
   es: {
     nav: {
       dashboard: 'Resumen',
-      analysis: 'Registros',
       economy: 'Economía',
-      historical: 'Historial',
-      alerts: 'Alertas',
+      telemetry: 'Telemetría',
+      operation_summary: 'Ops Resumen',
       news: 'Noticias',
       pld: 'Precio PLD',
+      sectorial_info: 'Info Sector',
+      notifications: 'Notificaciones',
+      about_us: 'Sobre Nosotros',
+      faq: 'FAQ',
       settings: 'Ajustes',
       premium: 'Premium',
-      logout: 'Cerrar sesión'
+      logout: 'Salir'
     },
-    pld: {
-      title: 'Precio de Mercado (PLD)',
-      subtitle: 'Precios horarios de liquidación en tiempo real (CCEE)',
-      regions: {
-        SUL: 'Sur',
-        SE_CO: 'SE / Centro-Oeste',
-        N: 'Norte',
-        NE: 'Nordeste'
-      },
-      currentPrice: 'Precio Actual',
-      hourlyTrend: 'Tendencia Horaria (R$/MWh)',
-      subregions: 'Subregiones',
-      lastUpdate: 'Fuente: Dados Abertos CCEE',
-      loading: 'Buscando datos de mercado...',
-      error: 'Error al conectar con los servidores de CCEE.'
-    },
-    alerts: {
-      title: 'Alertas de Uso',
-      subtitle: 'Configure umbrales personalizados para su monitoreo',
-      create: 'Crear Nueva Alerta',
-      type: 'Tipo de Alerta',
-      usage: 'Consumo (kWh)',
-      cost: 'Costo',
-      condition: 'Condición',
-      greater: 'Es mayor que',
-      less: 'Es menor que',
-      threshold: 'Valor Umbral',
-      source: 'Fuente de Energía',
-      save: 'Activar Alerta',
-      active: 'Alertas Activas',
-      noAlerts: 'No hay alertas configuradas.',
-      delete: 'Eliminar',
-      triggered: 'Alerta Disparada',
-      notificationTitle: 'Umbral Alcanzado',
-      usageExceeded: 'Su consumo de energía de {val} kWh superó su límite.',
-      costExceeded: 'Su costo de energía de {val} alcanzó el límite establecido.'
-    },
-    notifications: {
-      title: 'Notificaciones',
-      empty: 'No hay notificaciones nuevas',
-      markRead: 'Marcar todas como leídas',
-      clear: 'Limpiar todo'
-    },
-    login: {
-      subtitle: 'Monitoreo sofisticado de energía',
-      identity: 'Identidad',
-      credentials: 'Contraseña',
-      placeholderEmail: 'nombre@ejemplo.com',
-      placeholderPassword: '••••••••',
-      keepLoggedIn: 'Mantener sesión iniciada',
-      signIn: 'Entrar',
-      recovery: 'Acceso de Recuperación Seguro',
-      createAccount: 'Crear Cuenta',
-      newHere: '¿Nuevo en Smart Energia?',
-      alreadyHaveAccount: '¿Ya tienes una cuenta?',
-      fullName: 'Nombre Completo',
-      placeholderName: 'Juan Pérez',
-      confirmPassword: 'Confirmar Contraseña',
-      sendReset: 'Enviar Instrucciones',
-      backToSignIn: 'Volver al Inicio',
-      resetTitle: 'Recuperación de Contraseña',
-      resetSubtitle: 'Ingrese su e-mail para recibir las instrucciones',
-      resetSuccess: '¡Instrucciones enviadas! Revise su bandeja de entrada.',
-      signUpTitle: 'Únete a Smart Energia',
-      signUpSubtitle: 'Comience su viaje hacia la eficiencia energética'
-    },
-    policy: {
-      title: 'Términos y Condiciones',
-      lastUpdated: 'Última actualización: Octubre 2023',
-      intro: 'Bienvenido a Smart Energia. Al usar esta aplicación, acepta nuestro procesamiento de sus datos de consumo de energía para proporcionar información y visualizaciones.',
-      point1Title: 'Recopilación de Datos:',
-      point1Desc: 'Recopilamos métricas de uso de energía de sus medidores inteligentes para calcular costos y proporcionar recomendaciones de eficiencia.',
-      point2Title: 'Privacidad:',
-      point2Desc: 'Sus datos están encriptados y almacenados de forma segura. No vendemos sus datos personales a terceros.',
-      point3Title: 'Información de IA:',
-      point3Desc: 'Esta aplicación utiliza modelos de lenguaje avanzados para proporcionar sugerencias. Estas son solo recomendaciones y deben ser verificadas con un auditor de energía certificado.',
-      point4Title: 'Security de la Cuenta:',
-      point4Desc: 'Usted es responsable de mantener la confidencialidade de sus credenciales de inicio de sesión.',
-      agreeNote: 'Al hacer clic en "Acepto", acepta estos términos en su totalidad. Si no está de acuerdo, no podrá acceder a las funciones del panel.',
-      agree: 'Aceptar y Continuar',
-      disagree: 'No Acepto'
-    },
-    dashboard: {
-      title: 'Resumen',
-      subtitle: 'Su rendimiento energético de un vistazo',
-      source: 'Fuente',
-      sources: {
-        All: 'Todas',
-        Solar: 'Solar',
-        Grid: 'Red',
-        Battery: 'Batería'
-      },
-      stats: {
-        usage: 'Uso Total',
-        cost: 'Costo Estimado',
-        avg: 'Consumo Promedio',
-        economyTitle: 'Economía Mercado Libre'
-      },
-      charts: {
-        usageTrend: 'Tendencia de Uso',
-        costDist: 'Distribución de Custos',
-        annualTrend: 'Tendencia de Economía Anual',
-        costVsFree: 'Costo vs. Mercado Libre',
-        captive: 'Cautivo',
-        free: 'Libre',
-        economy: 'Economía'
-      },
-      ai: {
-        title: 'Información de Eficiencia IA',
-        subtitle: 'Recomendaciones personalizadas por Gemini',
-        refresh: 'Actualizar Información',
-        loading: 'Refinando...',
-        default: 'Generando información para su perfil de energía...',
-        error: 'No se pudo generar información en este momento.'
-      }
-    },
-    economy: {
-      title: 'Economía de Mercado',
-      subtitle: 'Ahorros generados por el Mercado Libre de Energía',
-      accumulated: 'Economía Acumulada',
-      monthly: 'Este Mes',
-      annually: 'Total Anual',
-      ytd: 'Acumulado en el Año (YTD)',
-      breakdown: 'Detalle de Costos',
-      comparison: 'Costo Cautivo vs. Mercado Libre',
-      labels: {
-        captive: 'Cautivo (Regulado)',
-        free: 'Actual (Mercado Libre)',
-        savings: 'Ahorro Neto'
-      },
-      charts: {
-        summary: 'Resumen de Economía',
-        historical: 'Historial',
-        projection: 'Proyección',
-        trend: 'Tendencia de Economía Anual',
-        estimated: 'Economía Estimada'
-      },
-      percentage: 'Tasa de Ahorro',
-      details: 'Basado en el análisis comparativo de tarifas reguladas en su región.',
-      projectionDisclaimer: '* Proyecciones basadas en el rendimiento actual y tendencias del mercado libre.'
-    },
-    historical: {
-      title: 'Historial de Consumo',
-      subtitle: 'Comparar el rendimiento energético de varios años',
-      compareByYear: 'Comparar por Año',
-      sources: 'Fuentes',
-      chartTitle: 'Comparación de Uso Mensual',
-      stats: {
-        highestYear: 'Año Más Eficiente',
-        totalKWh: 'Consumo Histórico Total',
-        yearOnYear: 'Tendencia Año tras Año'
-      }
-    },
-    analysis: {
-      title: 'Análisis de Datos',
-      subtitle: 'Profundice en sus registros de consumo',
-      export: 'Exportar CSV',
-      filters: {
-        start: 'Fecha Inicio',
-        end: 'Fecha Fin',
-        source: 'Fuente de Energía',
-        allSources: 'Todas las Fuentes'
-      },
-      table: {
-        date: 'Fecha',
-        source: 'Fuente',
-        usage: 'Uso (kWh)',
-        cost: 'Costo Real'
-      }
-    },
-    news: {
-      title: 'Últimas Noticias',
-      subtitle: 'Actualizaciones del mundo de la energía sostenible',
-      article: 'Article',
-      by: 'Por',
-      retry: 'Reintentar Carga',
-      error: 'No se pudieron cargar las noticias. Inténtelo de nuevo más tarde.',
-      viewAll: 'Explorar Portal Completo',
-      archive: 'Acceda a nuestro archivo completo con cientos de artículos y análisis exclusivos.',
-      accessNow: 'Acceder Ahora',
-      localEnd: 'Has visto todas las actualizaciones recientes.',
-      processing: 'Procesando...',
-      scrollForMore: 'Desplázate para descubrir más'
+    common: {
+      all: 'Todas',
+      units: 'Unidades',
+      date: 'Fecha',
+      loading: 'Cargando...',
+      noData: 'Sin datos.',
+      download: 'Bajar',
+      back: 'Volver',
+      verified: 'Verificado por Proveedor',
+      locked: 'Identidad Bloqueada'
     },
     settings: {
-      title: 'Configuración',
-      subtitle: 'Administre su cuenta y preferencias de la aplicación',
+      title: 'Ajustes',
+      subtitle: 'Gestionar cuenta y preferencias',
       profile: 'Perfil de Cuenta',
-      premium: 'Suscriptor Plan Premium',
-      edit: 'Editar',
+      premium: 'Suscriptor Premium',
+      edit: 'Gestionar',
+      accountID: 'Identificador de Cuenta',
+      identityNotice: 'Gestionado por proveedor central',
       appearance: 'Apariencia',
       theme: 'Preferencia de Tema',
-      themeDesc: 'Elija cómo se ve Smart Energia para usted',
+      themeDesc: 'Elija su estilo visual',
       language: 'Idioma',
-      languageDesc: 'Seleccione su idioma preferido',
+      languageDesc: 'Idioma de la app',
       notifications: 'Notificaciones',
       alerts: 'Alertas de Uso',
-      alertsDesc: 'Reciba notificaciones cuando el consumo exceda el promedio diario',
+      alertsDesc: 'Avisar al exceder límite',
       summary: 'Resumen Semanal',
-      summaryDesc: 'Reciba un informe de costos detallado cada lunes',
-      privacy: 'Privacidad y Seguridad',
-      changePassword: 'Cambiar Contraseña',
-      changePasswordDesc: 'Actualice sus credenciales de seguridad',
-      twoFactor: 'Autenticación de Dos Factores',
-      twoFactorStatus: 'Activado • Protegendo sus datos',
-      clearCache: 'Limpar Caché Local',
-      clearCacheDesc: 'Eliminar todos los datos almacenados en este dispositivo',
-      build: 'Versión'
+      summaryDesc: 'Informes de costo los lunes',
+      logout: 'Cerrar Sesión'
     },
     profile: {
       title: 'Mi Perfil',
-      subtitle: 'Información personal y membresía',
-      personalDetails: 'Detalles Pessoais',
-      name: 'Nombre',
-      email: 'Correo electrónico',
-      membership: 'Membresía',
-      membershipDesc: 'Miembro Premium desde 2023',
-      save: 'Guardar Cambios',
-      cancel: 'Cancelar',
-      back: 'Volver'
+      subtitle: 'Información verificada',
+      personalDetails: 'Detalles Personales',
+      name: 'Nombre Legal',
+      email: 'Correo Electrónico',
+      membership: 'Estado del Plan',
+      membershipDesc: 'Activo desde 2023',
+      save: 'Cerrar',
+      cancel: 'Volver'
+    },
+    dashboard: {
+      title: 'Resumen',
+      subtitle: 'Rendimiento de un vistazo',
+      source: 'Fuente',
+      sources: { All: 'Todas', Solar: 'Solar', Grid: 'Red', Battery: 'Batería' },
+      stats: { usage: 'Uso', cost: 'Costo', avg: 'Prom', economyTitle: 'Economía' },
+      charts: { usageTrend: 'Tendencia de Uso', costVsFree: 'Costo x Mercado', captive: 'Cautivo', free: 'Libre', economy: 'Economía' },
+      ai: { title: 'Insights de IA', subtitle: 'Análisis Gemini', refresh: 'Actualizar', loading: 'Pensando...', default: 'Esperando datos...' }
+    },
+    economy: {
+      title: 'Rendimiento Económico',
+      subtitle: 'Analice sus ahorros y tendencias del mercado',
+      tabs: {
+        annual: 'Bruto Anual',
+        monthly: 'Bruto Mensual',
+        captiveVsFree: 'Cautivo vs Libre',
+        costMWh: 'Costo por MWh'
+      }
+    },
+    telemetry: {
+      title: 'Telemetría',
+      subtitle: 'Consumo en tiempo real y datos técnicos',
+      tabs: {
+        consumption: 'Consumo',
+        demand: 'Demanda',
+        powerFactor: 'Factor de Potencia'
+      },
+      filters: {
+        discretization: 'Resolución'
+      }
+    },
+    ops: {
+      title: 'Resumen de Operaciones',
+      subtitle: 'Transacciones de mercado y contratos',
+      table: {
+        month: 'Mes',
+        unit: 'Unidad',
+        op: 'Operación',
+        counterparty: 'Contraparte',
+        amount: 'Monto',
+        price: 'Precio',
+        total: 'Valor Total'
+      }
+    },
+    news: {
+      title: 'Noticias del Sector',
+      subtitle: 'Manténgase actualizado con las tendencias del mercado',
+      article: 'Artículo',
+      by: 'Por',
+      processing: 'Cargando noticias...',
+      scrollForMore: 'Desliza para más'
+    },
+    sector: {
+      title: 'Información Sectorial',
+      subtitle: 'Descargue informes y actualizaciones regulatorias',
+      downloadBtn: 'Descargar Informe'
+    },
+    pld: {
+      title: 'Precio PLD',
+      subtitle: 'Monitoreo del Precio de Liquidación de Diferencias',
+      loading: 'Cargando datos de precios...',
+      tabs: {
+        history: 'Historial',
+        daily: 'Diario',
+        hourly: 'Horario'
+      }
+    },
+    login: {
+      subtitle: 'Bienvenido de nuevo a Smart Energia',
+      signUpSubtitle: 'Únase a nuestra red de eficiencia energética',
+      resetSubtitle: 'Recupere el acceso a su cuenta',
+      resetSuccess: 'Enlace de restablecimiento de contraseña enviado a su correo',
+      fullName: 'Nombre Completo',
+      placeholderName: 'Juan Pérez',
+      identity: 'Correo Electrónico',
+      placeholderEmail: 'correo@ejemplo.com',
+      credentials: 'Password',
+      placeholderPassword: '••••••••',
+      confirmPassword: 'Confirmar Contraseña',
+      keepLoggedIn: 'Mantener sesión iniciada',
+      recovery: '¿Olvidó su contraseña?',
+      signIn: 'Entrar',
+      createAccount: 'Crear Cuenta',
+      sendReset: 'Enviar Enlace',
+      newHere: '¿Nuevo en Smart Energia?',
+      alreadyHaveAccount: '¿Ya tienes una cuenta?'
+    },
+    policy: {
+      lastUpdated: 'Octubre de 2023',
+      title: 'Privacidad y Términos',
+      intro: 'Valoramos la privacidad y seguridad de sus datos. Al utilizar nuestra plataforma, usted acepta nuestras prácticas de manejo de datos.',
+      point1Title: 'Eficiencia Primero',
+      point1Desc: 'Utilizamos sus datos para optimizar el consumo energético y reducir costes.',
+      point2Title: 'Almacenamiento Seguro',
+      point2Desc: 'Su información está cifrada y almacenada en centros de datos seguros.',
+      point3Title: 'Control de Datos',
+      point3Desc: 'Tienes control total sobre tu historial de telemetría y preferencias.',
+      point4Title: 'Cumplimiento',
+      point4Desc: 'Cumplimos con LGPD y estándares internacionales de privacidad.',
+      agreeNote: 'Al hacer clic en aceptar, confirma que ha leído y aceptado nuestros Términos de uso y Política de privacidad.',
+      agree: 'Acepto',
+      disagree: 'No acepto'
     }
   }
 };

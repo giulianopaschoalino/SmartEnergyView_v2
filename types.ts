@@ -3,14 +3,18 @@ export interface EnergyRecord {
   timestamp: string;
   usageKWh: number;
   cost: number;
-  captiveCost: number; // Added to calculate economy
+  captiveCost: number;
   source: 'Solar' | 'Grid' | 'Battery';
 }
 
 export interface UserSession {
   isAuthenticated: boolean;
   email: string | null;
-  token?: string; // JWT/Sanctum Bearer token
+  name?: string;
+  profilePhotoUrl?: string;
+  clientId?: number;
+  scdeCode?: string;
+  token?: string;
   hasAgreedToPolicy: boolean;
   policyVersion: string;
   keepLoggedIn?: boolean;
@@ -42,12 +46,15 @@ export interface AppNotification {
 
 export enum ViewMode {
   Dashboard = 'dashboard',
-  Analysis = 'analysis',
   Economy = 'economy',
-  Historical = 'historical',
-  Alerts = 'alerts',
+  Telemetry = 'telemetry',
+  OperationSummary = 'operation_summary',
   News = 'news',
-  PLD = 'pld', 
+  PLD = 'pld',
+  SectorialInfo = 'sectorial_info',
+  Notifications = 'notifications',
+  AboutUs = 'about_us',
+  FAQ = 'faq',
   Settings = 'settings',
   Profile = 'profile'
 }
