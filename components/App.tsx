@@ -18,7 +18,7 @@ import { translations } from './translations.ts';
 import { ApiClient } from './services/apiClient.ts';
 import { 
   LayoutDashboard, Wallet, Settings, Newspaper, Globe,
-  List, MoreHorizontal, FileText, Info, HelpCircle, Activity, Building2, LayoutGrid
+  List, MoreHorizontal, FileText, Info, HelpCircle, Activity, Building2, LayoutGrid, Wifi, WifiOff
 } from 'lucide-react';
 
 const APP_POLICY_VERSION = "2023.10.1";
@@ -27,7 +27,6 @@ const SESSION_KEY = 'smartenergia_session';
 const getFullImageUrl = (path?: string) => {
   if (!path) return '';
   if (path.startsWith('http')) return path;
-  // Standardizing on the primary domain for assets to match API
   return `https://app.dev.smartenergia.com.br/api/images/${path.split('/').pop()}`;
 };
 
@@ -52,8 +51,8 @@ const App: React.FC = () => {
   const [data, setData] = useState<EnergyRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   
-  // State for unit management
   const [units, setUnits] = useState<any[]>([]);
   const [selectedUnit, setSelectedUnit] = useState<any | null>(null);
 
@@ -73,49 +72,41 @@ const App: React.FC = () => {
     localStorage.setItem('smart_theme', theme);
   }, [theme]);
 
-  // Initial Sync: Load client units and default telemetry
+  // Network listener
   useEffect(() => {
-    if (session.isAuthenticated && session.token) {
-      const sync = async () => {
-        setLoading(true);
-        try {
-          if (session.clientId) {
-            const fetchedUnits = await fetchClientUnits(session.clientId);
-            setUnits(fetchedUnits || []);
-            // Set initial selected unit if scdeCode is present in session
-            if (session.scdeCode) {
-              const matched = fetchedUnits.find(u => u.codigo_scde === session.scdeCode);
-              if (matched) setSelectedUnit(matched);
-            }
-          }
-        } catch (error) {
-          console.warn("Initial sync error:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-      sync();
-    }
-  }, [session.isAuthenticated, session.token, session.clientId]);
+    const handleStatusChange = () => setIsOnline(navigator.onLine);
+    window.addEventListener('online', handleStatusChange);
+    window.addEventListener('offline', handleStatusChange);
+    return () => {
+      window.removeEventListener('online', handleStatusChange);
+      window.removeEventListener('offline', handleStatusChange);
+    };
+  }, []);
 
-  // Telemetry refetch when global unit selection changes or on initial auth
-  useEffect(() => {
-    if (session.isAuthenticated && session.token) {
-      const fetchLogs = async () => {
-        setLoading(true);
-        try {
-          // If selectedUnit is null, fetch consumption for all units
-          const logs = await fetchConsumptionLogs(365, selectedUnit?.codigo_scde);
-          setData(logs || []);
-        } catch (error) {
-          console.warn("Logs fetch error:", error);
-        } finally {
-          setLoading(false);
+  const syncAll = useCallback(async () => {
+    if (!session.isAuthenticated || !session.token) return;
+    setLoading(true);
+    try {
+      if (session.clientId && units.length === 0) {
+        const fetchedUnits = await fetchClientUnits(session.clientId);
+        setUnits(fetchedUnits || []);
+        if (session.scdeCode && !selectedUnit) {
+          const matched = fetchedUnits.find(u => u.codigo_scde === session.scdeCode);
+          if (matched) setSelectedUnit(matched);
         }
-      };
-      fetchLogs();
+      }
+      const logs = await fetchConsumptionLogs(365, selectedUnit?.codigo_scde);
+      setData(logs || []);
+    } catch (error) {
+      console.warn("Global sync failed:", error);
+    } finally {
+      setLoading(false);
     }
-  }, [session.isAuthenticated, session.token, selectedUnit]);
+  }, [session, selectedUnit, units.length]);
+
+  useEffect(() => {
+    syncAll();
+  }, [syncAll]);
 
   const navItems = [
     { id: ViewMode.Dashboard, label: t.nav.dashboard, icon: LayoutDashboard },
@@ -137,7 +128,7 @@ const App: React.FC = () => {
       (keep ? localStorage : sessionStorage).setItem(SESSION_KEY, JSON.stringify(s));
     } catch (err: any) {
       console.error("Login failure", err);
-      alert(err.message || "Authentication failed. Check your network or credentials.");
+      alert(err.message || "Authentication failed.");
     }
   }} t={t.login} isDarkMode={document.documentElement.classList.contains('dark')} />;
 
@@ -147,9 +138,15 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-[#F2F2F7] dark:bg-black transition-colors duration-500 pb-safe font-inter selection:bg-yinmn">
       {/* Primary Navigation */}
       <nav className="glass sticky top-0 z-50 px-4 md:px-10 py-1.5 flex items-center justify-between border-b border-black/5 dark:border-white/5">
-        <button onClick={() => setViewMode(ViewMode.Dashboard)} className="hover:opacity-80 transition-all outline-none">
-          <InfinityLogo className="w-16 md:w-20" isDarkMode={document.documentElement.classList.contains('dark')} />
-        </button>
+        <div className="flex items-center gap-4">
+          <button onClick={() => setViewMode(ViewMode.Dashboard)} className="hover:opacity-80 transition-all outline-none">
+            <InfinityLogo className="w-16 md:w-20" isDarkMode={document.documentElement.classList.contains('dark')} />
+          </button>
+          <div className={`hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded-full ${isOnline ? 'bg-cyan/10 text-cyan' : 'bg-red-500/10 text-red-500'}`}>
+            {isOnline ? <Wifi size={12} /> : <WifiOff size={12} />}
+            <span className="text-[9px] font-black uppercase tracking-widest">{isOnline ? 'Live' : 'Offline'}</span>
+          </div>
+        </div>
         <div className="hidden lg:flex bg-black/5 dark:bg-white/5 p-0.5 rounded-[20px] backdrop-blur-3xl overflow-x-auto no-scrollbar shadow-inner">
           {navItems.map(item => (
             <button key={item.id} onClick={() => setViewMode(item.id)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[16px] text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === item.id ? 'bg-white dark:bg-white/15 text-yinmn dark:text-bondi shadow-sm' : 'text-slate-500 hover:text-yinmn dark:hover:text-white'}`}>
@@ -167,7 +164,7 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      {/* Global Unit Selector Bar */}
+      {/* Global Unity Selector Bar */}
       {session.isAuthenticated && (
         <div className="sticky top-[58px] z-40 bg-white/60 dark:bg-black/60 backdrop-blur-xl border-b border-black/5 dark:border-white/5 py-3 px-4 md:px-10 overflow-x-auto no-scrollbar">
           <div className="max-w-[1600px] mx-auto flex items-center gap-2">
@@ -203,9 +200,17 @@ const App: React.FC = () => {
             <div className="w-16 h-16 border-4 border-yinmn rounded-full border-t-transparent animate-spin" />
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t.common.loading}</p>
           </div>
+        ) : !isOnline && data.length === 0 ? (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center px-6">
+            <WifiOff size={64} className="text-slate-300 dark:text-slate-700" />
+            <div className="space-y-2">
+              <h3 className="text-xl font-black text-night dark:text-white uppercase tracking-tight">Offline Mode</h3>
+              <p className="text-sm text-slate-500 max-w-sm">Please check your internet connection. Some data might be unavailable until you're back online.</p>
+            </div>
+            <button onClick={syncAll} className="px-8 py-3 bg-yinmn text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl">Try Reconnecting</button>
+          </div>
         ) : (
           <>
-            {/* Injecting selectedUnit prop to fix missing property errors in child components */}
             {viewMode === ViewMode.Dashboard && <Dashboard data={data} isDarkMode={document.documentElement.classList.contains('dark')} t={t.dashboard} lang={language} selectedUnit={selectedUnit} />}
             {viewMode === ViewMode.Economy && <EconomyView data={data} t={t} lang={language} selectedUnit={selectedUnit} />}
             {viewMode === ViewMode.Telemetry && <TelemetryView session={session} t={t} lang={language} selectedUnit={selectedUnit} />}
@@ -221,6 +226,7 @@ const App: React.FC = () => {
         )}
       </main>
 
+      {/* Mobile Nav */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60]">
         {isMoreOpen && (
           <div className="absolute bottom-full left-0 right-0 px-4 pb-6 animate-in slide-in-from-bottom-10">

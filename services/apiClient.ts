@@ -1,14 +1,13 @@
-
 /**
  * API Client for Smart Energia
- * Integrated with Laravel Sanctum Authentication and Request Optimization
+ * Integrated with Laravel Sanctum Authentication
+ * Features: Automatic Retry, CORS Proxy Fallback, and Sanctum compatibility
  */
 
-const BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'https://api.energiasmart.com.br/api';
+const BASE_URL = 'https://app.dev.smartenergia.com.br/api';
 
 export class ApiClient {
   private static _token: string | null = null;
-  private static _activeRequests = new Map<string, AbortController>();
 
   static setAuthToken(token: string | null) {
     this._token = token;
@@ -16,9 +15,10 @@ export class ApiClient {
 
   private static getHeaders() {
     const headers: HeadersInit = {
-      'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest'
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
     };
     
     let token = this._token;
@@ -29,9 +29,7 @@ export class ApiClient {
         try {
           const session = JSON.parse(sessionStr);
           token = session.token;
-        } catch (e) {
-          console.error("Error parsing session for token", e);
-        }
+        } catch (e) {}
       }
     }
 
@@ -43,26 +41,52 @@ export class ApiClient {
   }
 
   /**
-   * Universal fetch with AbortController support to optimize performance
+   * Primary request method with retry logic and proxy fallback
    */
-  private static async request<T>(endpoint: string, options: RequestInit): Promise<T> {
-    // Optimization: Cancel existing identical request to prevent duplicate loading
-    if (this._activeRequests.has(endpoint)) {
-      this._activeRequests.get(endpoint)?.abort();
-    }
-
-    const controller = new AbortController();
-    this._activeRequests.set(endpoint, controller);
-
+  private static async request<T>(endpoint: string, options: RequestInit, retryCount = 0): Promise<T> {
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+    const url = `${BASE_URL}/${cleanEndpoint}`;
+    
     try {
-      const response = await fetch(`${BASE_URL}${endpoint}`, {
+      const response = await fetch(url, {
         ...options,
-        headers: { ...this.getHeaders(), ...options.headers },
-        signal: controller.signal
+        mode: 'cors',
+        headers: { ...this.getHeaders(), ...options.headers }
       });
       return await this.handleResponse<T>(response);
-    } finally {
-      this._activeRequests.delete(endpoint);
+    } catch (error: any) {
+      // If it's a "Failed to fetch" error and we haven't exhausted retries
+      if (error.name === 'TypeError' && error.message === 'Failed to fetch' && retryCount < 2) {
+        const delay = Math.pow(2, retryCount) * 1000;
+        console.warn(`Fetch failed. Retrying in ${delay}ms... (Attempt ${retryCount + 1})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.request<T>(endpoint, options, retryCount + 1);
+      }
+
+      // Final fallback: Try with a CORS proxy if direct fetch failed after retries
+      if (error.name === 'TypeError' && error.message === 'Failed to fetch' && retryCount === 2) {
+        console.warn("Direct fetch failed. Attempting with CORS proxy fallback...");
+        return this.requestWithProxy<T>(url, options);
+      }
+
+      console.error(`API call to ${cleanEndpoint} failed.`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Last-resort fallback for CORS/Network issues in dev environments
+   */
+  private static async requestWithProxy<T>(targetUrl: string, options: RequestInit): Promise<T> {
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+    try {
+      const response = await fetch(proxyUrl, {
+        ...options,
+        headers: { ...this.getHeaders(), ...options.headers }
+      });
+      return await this.handleResponse<T>(response);
+    } catch (proxyError: any) {
+      throw new Error("Network error: Server unreachable even through proxy. Please check your connection.");
     }
   }
 
@@ -73,7 +97,7 @@ export class ApiClient {
   static async post<T>(endpoint: string, body?: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
-      body: body ? JSON.stringify(body) : undefined,
+      body: JSON.stringify(body || {}),
     });
   }
 
@@ -96,15 +120,25 @@ export class ApiClient {
     
     const contentType = response.headers.get("content-type");
     const isJson = contentType && contentType.includes("application/json");
-    const responseData = isJson ? await response.json().catch(() => ({})) : await response.text();
+    
+    let responseData;
+    try {
+      responseData = isJson ? await response.json() : await response.text();
+    } catch (e) {
+      responseData = {};
+    }
 
     if (!response.ok) {
       const message = (typeof responseData === 'object') 
-        ? (responseData.error || responseData.message) 
+        ? (responseData.error || responseData.message || responseData.data?.message) 
         : responseData;
-      throw new Error(message || `Request failed with status ${response.status}`);
+      throw new Error(message || `API Error: ${response.status}`);
     }
     
-    return (responseData && responseData.data !== undefined ? responseData.data : responseData) as T;
+    if (responseData && typeof responseData === 'object' && responseData.data !== undefined) {
+      return responseData.data as T;
+    }
+    
+    return responseData as T;
   }
 }

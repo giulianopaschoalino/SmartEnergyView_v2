@@ -106,6 +106,32 @@
 </script>
 </head>
 <body class="selection:bg-bondi selection:text-white">
+    <!-- SVG Patterns for Estimated Data Stripes -->
+    <svg width="0" height="0" style="position:absolute; pointer-events: none;">
+      <defs>
+        <pattern id="stripes-primary" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+          <rect width="10" height="10" fill="#375785" />
+          <line x1="0" y1="0" x2="0" y2="10" stroke="rgba(255,255,255,0.25)" strokeWidth="5" />
+        </pattern>
+        <pattern id="stripes-light" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+          <rect width="10" height="10" fill="#C2D5FB" />
+          <line x1="0" y1="0" x2="0" y2="10" stroke="rgba(255,255,255,0.4)" strokeWidth="5" />
+        </pattern>
+        <pattern id="stripes-bondi" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+          <rect width="10" height="10" fill="#1991B3" />
+          <line x1="0" y1="0" x2="0" y2="10" stroke="rgba(255,255,255,0.25)" strokeWidth="5" />
+        </pattern>
+        <pattern id="stripes-success" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+          <rect width="10" height="10" fill="#27908F" />
+          <line x1="0" y1="0" x2="0" y2="10" stroke="rgba(255,255,255,0.25)" strokeWidth="5" />
+        </pattern>
+        <pattern id="stripes-telemetry" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+          <rect width="10" height="10" fill="#74ACEC" />
+          <line x1="0" y1="0" x2="0" y2="10" stroke="rgba(255,255,255,0.25)" strokeWidth="5" />
+        </pattern>
+      </defs>
+    </svg>
+
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
 </body>

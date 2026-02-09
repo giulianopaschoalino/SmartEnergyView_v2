@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Language } from '../types.ts';
 import { Lock, LogOut, ChevronRight } from 'lucide-react';
@@ -21,29 +20,31 @@ const getFullImageUrl = (path?: string) => {
   if (!path || path === '') return '';
   if (path.startsWith('http')) return path;
   const filename = path.split('/').pop() || path;
-  return `https://api.energiasmart.com.br/images/${filename}`;
+  return `https://app.dev.smartenergia.com.br/api/images/${filename}`;
 };
 
 const SettingsView: React.FC<SettingsViewProps> = ({ theme, setTheme, language, setLanguage, name, profilePhotoUrl, email, t, tCommon, onEditProfile, onLogout }) => {
   const [imgError, setImgError] = useState(false);
 
   const renderProfileAvatar = () => {
-    const sizeClass = "w-28 h-28";
+    const sizeClass = "w-32 h-32";
     const photoUrl = getFullImageUrl(profilePhotoUrl);
     
     if (photoUrl && !imgError) {
       return (
-        <img 
-          src={photoUrl} 
-          alt={name || "User Profile"} 
-          onError={() => setImgError(true)}
-          className={`${sizeClass} rounded-[28px] object-cover bg-white dark:bg-white/10 border-4 border-white dark:border-white/10 shadow-xl ring-1 ring-black/5`}
-        />
+        <div className={`${sizeClass} rounded-[32px] overflow-hidden bg-slate-100 dark:bg-white/10 border-4 border-white dark:border-white/10 shadow-xl ring-1 ring-black/5 flex items-center justify-center`}>
+          <img 
+            src={photoUrl} 
+            alt={name || "User Profile"} 
+            onError={() => setImgError(true)}
+            className="w-full h-full object-contain"
+          />
+        </div>
       );
     }
     const initial = (name?.[0] || email?.[0] || 'U').toUpperCase();
     return (
-      <div className={`${sizeClass} bg-gradient-to-br from-yinmn to-bondi rounded-[28px] flex items-center justify-center text-white font-black text-4xl uppercase shadow-xl ring-1 ring-black/5`}>
+      <div className={`${sizeClass} bg-gradient-to-br from-yinmn to-bondi rounded-[32px] flex items-center justify-center text-white font-black text-4xl uppercase shadow-xl ring-1 ring-black/5`}>
         {initial}
       </div>
     );
@@ -65,7 +66,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ theme, setTheme, language, 
               <div className="flex flex-col sm:flex-row items-center gap-8 text-center sm:text-left">
                 {renderProfileAvatar()}
                 <div>
-                  <p className="text-2xl font-black text-night dark:text-white tracking-tight leading-tight uppercase">{name || 'Verified User'}</p>
+                  <p className="text-2xl font-black text-night dark:text-white tracking-tight leading-tight uppercase">{name || tCommon.verifiedUser || 'Verified User'}</p>
                   <p className="text-[11px] font-black text-bondi uppercase tracking-[0.25em] mt-2">{t.premium}</p>
                 </div>
               </div>
@@ -165,7 +166,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ theme, setTheme, language, 
 
       <footer className="text-center py-10">
         <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em]">
-          Smart Energia Insight • v2.0.4 • Build 108
+          {t.version}
         </p>
       </footer>
     </div>

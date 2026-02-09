@@ -2,36 +2,34 @@
 import { GoogleGenAI } from "@google/genai";
 import { EnergyRecord } from "../types.ts";
 
-export const getEnergyInsights = async (data: EnergyRecord[], language: string = 'en') => {
-  // Always initialize right before use to ensure the most current environment variables are used.
+/**
+ * Generates energy efficiency insights using Google Gemini AI.
+ * Adheres to strict initialization rules: creating a new instance right before the call.
+ */
+export const getEnergyInsights = async (data: EnergyRecord[], language: string = 'en'): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
-  // Aggregate data for a concise prompt
   const summary = data.reduce((acc, curr) => {
     acc.totalUsage += curr.usageKWh;
     acc.totalCost += curr.cost;
     acc.sources[curr.source] = (acc.sources[curr.source] || 0) + curr.usageKWh;
     return acc;
-  }, { totalUsage: 0, totalCost: 0, sources: {} as any });
+  }, { totalUsage: 0, totalCost: 0, sources: {} as Record<string, number> });
 
-  const languageContexts: Record<string, string> = {
-    en: "Please provide the response in English.",
-    pt: "Por favor, forneça a resposta em Português do Brasil.",
-    es: "Por favor, proporcione la respuesta en Español."
+  const prompts: Record<string, string> = {
+    en: "Provide 3 concise, actionable bullet points for cost saving and efficiency based on this data. High-end corporate tone.",
+    pt: "Forneça 3 pontos objetivos e acionáveis para economia de custos e eficiência baseados nestes dados. Tom corporativo sofisticado.",
+    es: "Proporcione 3 puntos concisos y prácticos para el ahorro de costos y la eficiencia basados en estos datos. Tono corporativo de alto nivel."
   };
 
-  const currentContext = languageContexts[language] || languageContexts.en;
-
+  const currency = language === 'pt' ? 'R$' : '$';
   const prompt = `
-    Analyze this energy consumption data for the past 30 days:
-    Total Usage: ${summary.totalUsage.toFixed(2)} kWh
-    Total Cost: ${language === 'pt' ? 'R$' : '$'}${summary.totalCost.toFixed(2)}
-    Breakdown by source: ${JSON.stringify(summary.sources)}
+    Analyze this energy data (30 days):
+    Usage: ${summary.totalUsage.toFixed(2)} kWh
+    Cost: ${currency}${summary.totalCost.toFixed(2)}
+    Sources: ${JSON.stringify(summary.sources)}
     
-    ${currentContext}
-    Provide 3 concise, actionable bullet points for cost saving and efficiency.
-    Use a professional, high-end corporate tone.
-    Ensure currency formatting matches the selected language.
+    Instruction: ${prompts[language] || prompts.en}
   `;
 
   try {
@@ -40,18 +38,14 @@ export const getEnergyInsights = async (data: EnergyRecord[], language: string =
       contents: prompt,
     });
 
-    // FIX: Manually extract text parts to avoid the 'thoughtSignature' console warning
-    // triggered by the response.text getter when reasoning parts are present.
-    const text = response.candidates?.[0]?.content?.parts
-      ?.filter(part => part.text)
-      ?.map(part => part.text)
-      ?.join('') || '';
-
-    return text;
+    return response.text || (language === 'pt' ? "Sem insights disponíveis." : "No insights available.");
   } catch (error) {
-    console.error("Gemini Error:", error);
-    return language === 'pt' ? "Não foi possível gerar insights no momento." : 
-           language === 'es' ? "No se pudo generar información en este momento." : 
-           "Unable to generate insights at this time.";
+    console.error("Gemini Insight Error:", error);
+    const errorMsgs: Record<string, string> = {
+      pt: "Não foi possível gerar insights no momento.",
+      es: "No se pudo generar información en este momento.",
+      en: "Unable to generate insights at this time."
+    };
+    return errorMsgs[language] || errorMsgs.en;
   }
 };

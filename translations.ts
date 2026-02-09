@@ -1,4 +1,3 @@
-
 export const translations = {
   en: {
     nav: {
@@ -19,13 +18,20 @@ export const translations = {
     common: {
       all: 'All',
       units: 'Units',
+      allUnits: 'All Units',
       date: 'Date',
       loading: 'Loading...',
       noData: 'No data available.',
       download: 'Download',
       back: 'Back',
       verified: 'Verified by Provider',
-      locked: 'Identity Locked'
+      locked: 'Identity Locked',
+      refresh: 'Refresh',
+      reload: 'Reload',
+      updating: 'Updating...',
+      fetching: 'Fetching...',
+      tryAgain: 'Try Again',
+      more: 'More'
     },
     settings: {
       title: 'Settings',
@@ -45,7 +51,8 @@ export const translations = {
       alertsDesc: 'Notify when over limit',
       summary: 'Weekly Summary',
       summaryDesc: 'Monday cost reports',
-      logout: 'Log Out'
+      logout: 'Log Out',
+      version: 'Smart Energia Insight • v2.0.4 • Build 108'
     },
     profile: {
       title: 'My Profile',
@@ -56,7 +63,8 @@ export const translations = {
       membership: 'Plan Status',
       membershipDesc: 'Active since 2023',
       save: 'Close',
-      cancel: 'Back'
+      cancel: 'Back',
+      verifiedUser: 'Verified User'
     },
     dashboard: {
       title: 'Overview',
@@ -64,12 +72,38 @@ export const translations = {
       source: 'Source',
       sources: { All: 'All', Solar: 'Solar', Grid: 'Grid', Battery: 'Battery' },
       stats: { usage: 'Usage', cost: 'Cost', avg: 'Avg', economyTitle: 'Economy' },
-      charts: { usageTrend: 'Usage Trend', costVsFree: 'Cost vs Market', captive: 'Captive', free: 'Free', economy: 'Economy' },
-      ai: { title: 'AI Insights', subtitle: 'Gemini Analysis', refresh: 'Update', loading: 'Thinking...', default: 'Awaiting data...' }
+      charts: { 
+        usageTrend: 'Usage Trend', 
+        costVsFree: 'Cost vs Market', 
+        captive: 'Captive', 
+        free: 'Free', 
+        economy: 'Economy',
+        annualGross: 'Annual Gross Economy',
+        monthlyGross: 'Monthly Gross Economy',
+        monthlySavings: 'Savings History',
+        captiveVsFree: 'Captive x Livre',
+        estimates: 'Estimates Comparison',
+        mwhPrice: 'Price per MWh',
+        indicator: 'Indicator History'
+      },
+      accumulated: 'Current Accumulated',
+      refreshAll: 'Update Everything',
+      refreshingAll: 'Refreshing All...',
+      pldUnit: 'R$/MWh',
+      ai: { 
+        title: 'AI Insights', 
+        subtitle: 'Gemini Analysis', 
+        refresh: 'Update', 
+        loading: 'Thinking...', 
+        default: 'Awaiting data...',
+        prompt: 'Click the Refresh icon above to generate AI Insights for your current energy data.'
+      }
     },
     economy: {
       title: 'Economic Performance',
       subtitle: 'Analyze your savings and market trends',
+      emptyTitle: "Where's the data?",
+      emptySubtitle: 'No records found for the selected period.',
       tabs: {
         annual: 'Annual Gross',
         monthly: 'Monthly Gross',
@@ -80,18 +114,44 @@ export const translations = {
     telemetry: {
       title: 'Telemetry',
       subtitle: 'Real-time consumption and technical data',
+      historicalNotice: 'Historical View: Displaying points from previous period (no current data found).',
       tabs: {
         consumption: 'Consumption',
         demand: 'Demand',
-        powerFactor: 'Power Factor'
+        powerFactor: 'Factor de Potencia'
       },
       filters: {
         discretization: 'Resolution'
+      },
+      labels: {
+        consumption: 'Consumption (kWh)',
+        reativa: 'Reactive',
+        contracted: 'Contracted',
+        registered: 'Registered',
+        tolerance: 'Tolerance',
+        reference: 'Reference (0.92)',
+        inductive: 'Inductive',
+        capacitive: 'Capacitive'
       }
+    },
+    historical: {
+      compare: 'Compare Generations',
+      sourceFilter: 'Source Filter',
+      usageTitle: 'Historical Usage',
+      usageSubtitle: 'Generation Comparison (kWh)',
+      zeroAxis: 'Zero Axis',
+      shrinkToFit: 'Shrink to Fit'
     },
     ops: {
       title: 'Operation Summary',
       subtitle: 'Market transactions and contracts',
+      purchase: 'Purchase',
+      sale: 'Sale',
+      assignment: 'Assignment',
+      loading: 'Processing Market Data...',
+      months: 'Months',
+      allMonths: 'All Months',
+      allUnits: 'All Units',
       table: {
         month: 'Month',
         unit: 'Unit',
@@ -113,12 +173,20 @@ export const translations = {
     sector: {
       title: 'Sectorial Information',
       subtitle: 'Download reports and regulatory updates',
-      downloadBtn: 'Download Report'
+      downloadBtn: 'Download Report',
+      error: 'Report not available yet.'
     },
     pld: {
       title: 'PLD Price',
       subtitle: 'Market Clearing Price monitoring',
       loading: 'Loading price data...',
+      sync: 'Sync Price Data',
+      regions: {
+        north: 'North',
+        ne: 'NE',
+        se: 'SE/CO',
+        south: 'South'
+      },
       tabs: {
         history: 'Historical',
         daily: 'Daily',
@@ -160,6 +228,11 @@ export const translations = {
       agreeNote: 'By clicking agree, you confirm that you have read and accepted our Terms of Use and Privacy Policy.',
       agree: 'I Agree',
       disagree: 'I Disagree'
+    },
+    static: {
+      infoUnavailable: 'Information temporarily unavailable.',
+      checkBackLater: 'Please try refreshing the page or check back later.',
+      noFaq: 'No frequently asked questions available.'
     }
   },
   pt: {
@@ -181,13 +254,20 @@ export const translations = {
     common: {
       all: 'Todas',
       units: 'Unidades',
+      allUnits: 'Todas as Unidades',
       date: 'Data',
       loading: 'Carregando...',
       noData: 'Sem dados.',
       download: 'Baixar',
       back: 'Voltar',
       verified: 'Verificado pelo Provedor',
-      locked: 'Identidade Bloqueada'
+      locked: 'Identidade Bloqueada',
+      refresh: 'Atualizar',
+      reload: 'Recarregar',
+      updating: 'Atualizando...',
+      fetching: 'Buscando...',
+      tryAgain: 'Tentar Novamente',
+      more: 'Mais'
     },
     settings: {
       title: 'Ajustes',
@@ -207,7 +287,8 @@ export const translations = {
       alertsDesc: 'Avisar quando exceder limite',
       summary: 'Resumo Semanal',
       summaryDesc: 'Relatórios de custo toda segunda',
-      logout: 'Sair da Conta'
+      logout: 'Sair da Conta',
+      version: 'Smart Energia Insight • v2.0.4 • Build 108'
     },
     profile: {
       title: 'Meu Perfil',
@@ -218,7 +299,8 @@ export const translations = {
       membership: 'Status do Plano',
       membershipDesc: 'Ativo desde 2023',
       save: 'Fechar',
-      cancel: 'Voltar'
+      cancel: 'Voltar',
+      verifiedUser: 'Usuário Verificado'
     },
     dashboard: {
       title: 'Visão Geral',
@@ -226,15 +308,41 @@ export const translations = {
       source: 'Fonte',
       sources: { All: 'Todas', Solar: 'Solar', Grid: 'Rede', Battery: 'Bateria' },
       stats: { usage: 'Uso', cost: 'Custo', avg: 'Média', economyTitle: 'Economia' },
-      charts: { usageTrend: 'Tendência de Uso', costVsFree: 'Custo x Mercado', captive: 'Cativo', free: 'Livre', economy: 'Economia' },
-      ai: { title: 'Insights de IA', subtitle: 'Análise Gemini', refresh: 'Atualizar', loading: 'Pensando...', default: 'Aguardando dados...' }
+      charts: { 
+        usageTrend: 'Tendência de Uso', 
+        costVsFree: 'Custo x Mercado', 
+        captive: 'Cativo', 
+        free: 'Livre', 
+        economy: 'Economia',
+        annualGross: 'Economia Anual Bruta',
+        monthlyGross: 'Economia Mensal Bruta',
+        monthlySavings: 'Histórico de Economia',
+        captiveVsFree: 'Cativo x Livre',
+        estimates: 'Comparação de Estimativas',
+        mwhPrice: 'Preço por MWh',
+        indicator: 'Histórico do Indicador'
+      },
+      accumulated: 'Acumulado Atual',
+      refreshAll: 'Atualizar Tudo',
+      refreshingAll: 'Atualizando Tudo...',
+      pldUnit: 'R$/MWh',
+      ai: { 
+        title: 'Insights de IA', 
+        subtitle: 'Análise Gemini', 
+        refresh: 'Atualizar', 
+        loading: 'Pensando...', 
+        default: 'Aguardando dados...',
+        prompt: 'Clique no ícone de Atualizar acima para gerar Insights de IA para seus dados de energia atuais.'
+      }
     },
     economy: {
       title: 'Desempenho Econômico',
       subtitle: 'Analise suas economias e tendências de mercado',
+      emptyTitle: "Onde estão os dados?",
+      emptySubtitle: 'Nenhum registro encontrado para o período selecionado.',
       tabs: {
         annual: 'Bruto Anual',
-        monthly: 'Bruto Mensal',
+        monthly: 'Bruto Mensual',
         captiveVsFree: 'Cativo x Livre',
         costMWh: 'Custo por MWh'
       }
@@ -242,6 +350,7 @@ export const translations = {
     telemetry: {
       title: 'Telemetria',
       subtitle: 'Consumo em tempo real e dados técnicos',
+      historicalNotice: 'Visão Histórica: Exibindo pontos do período anterior (nenhum dado atual encontrado).',
       tabs: {
         consumption: 'Consumo',
         demand: 'Demanda',
@@ -249,11 +358,36 @@ export const translations = {
       },
       filters: {
         discretization: 'Resolução'
+      },
+      labels: {
+        consumption: 'Consumo (kWh)',
+        reativa: 'Reativa',
+        contracted: 'Contratada',
+        registered: 'Registrada',
+        tolerance: 'Tolerância',
+        reference: 'Referência (0.92)',
+        inductive: 'Indutivo',
+        capacitive: 'Capacitivo'
       }
+    },
+    historical: {
+      compare: 'Comparar Gerações',
+      sourceFilter: 'Filtro de Fonte',
+      usageTitle: 'Uso Histórico',
+      usageSubtitle: 'Comparação de Geração (kWh)',
+      zeroAxis: 'Eixo Zero',
+      shrinkToFit: 'Ajustar aos Dados'
     },
     ops: {
       title: 'Resumo de Operações',
       subtitle: 'Transações de mercado e contratos',
+      purchase: 'Compra',
+      sale: 'Venda',
+      assignment: 'Cessão',
+      loading: 'Processando Dados de Mercado...',
+      months: 'Meses',
+      allMonths: 'Todos os Meses',
+      allUnits: 'Todas as Unidades',
       table: {
         month: 'Mês',
         unit: 'Unidade',
@@ -275,12 +409,20 @@ export const translations = {
     sector: {
       title: 'Informação Setorial',
       subtitle: 'Baixe relatórios e atualizações regulatórias',
-      downloadBtn: 'Baixar Relatório'
+      downloadBtn: 'Baixar Relatório',
+      error: 'Relatório ainda não disponível.'
     },
     pld: {
       title: 'Preço PLD',
       subtitle: 'Monitoramento do Preço de Liquidação das Diferenças',
       loading: 'Carregando dados de preços...',
+      sync: 'Sincronizar Preços',
+      regions: {
+        north: 'Norte',
+        ne: 'NE',
+        se: 'SE/CO',
+        south: 'Sul'
+      },
       tabs: {
         history: 'Histórico',
         daily: 'Diário',
@@ -317,11 +459,16 @@ export const translations = {
       point2Desc: 'Suas informações são criptografadas e armazenadas em servidores seguros.',
       point3Title: 'Controle de Dados',
       point3Desc: 'Você tem controle total sobre seu histórico de telemetria e preferências.',
-      point4Title: 'Conformidade',
+      point4Title: 'Compliance',
       point4Desc: 'Seguimos a LGPD e padrões internacionais de privacidade.',
       agreeNote: 'Ao clicar em concordar, você confirma que leu e aceitou nossos Termos de Uso e Política de Privacidade.',
       agree: 'Eu Concordo',
       disagree: 'Não Concordo'
+    },
+    static: {
+      infoUnavailable: 'Informações temporariamente indisponíveis.',
+      checkBackLater: 'Por favor, tente atualizar a página ou volte mais tarde.',
+      noFaq: 'Nenhuma pergunta frequente disponível.'
     }
   },
   es: {
@@ -343,13 +490,20 @@ export const translations = {
     common: {
       all: 'Todas',
       units: 'Unidades',
+      allUnits: 'Todas las Unidades',
       date: 'Fecha',
       loading: 'Cargando...',
       noData: 'Sin datos.',
       download: 'Bajar',
       back: 'Volver',
       verified: 'Verificado por Proveedor',
-      locked: 'Identidad Bloqueada'
+      locked: 'Identidad Bloqueada',
+      refresh: 'Actualizar',
+      reload: 'Recargar',
+      updating: 'Actualizando...',
+      fetching: 'Buscando...',
+      tryAgain: 'Intentar de Nuevo',
+      more: 'Más'
     },
     settings: {
       title: 'Ajustes',
@@ -369,7 +523,8 @@ export const translations = {
       alertsDesc: 'Avisar al exceder límite',
       summary: 'Resumen Semanal',
       summaryDesc: 'Informes de costo los lunes',
-      logout: 'Cerrar Sesión'
+      logout: 'Cerrar Sesión',
+      version: 'Smart Energia Insight • v2.0.4 • Build 108'
     },
     profile: {
       title: 'Mi Perfil',
@@ -380,7 +535,8 @@ export const translations = {
       membership: 'Estado del Plan',
       membershipDesc: 'Activo desde 2023',
       save: 'Cerrar',
-      cancel: 'Volver'
+      cancel: 'Volver',
+      verifiedUser: 'Usuario Verificado'
     },
     dashboard: {
       title: 'Resumen',
@@ -388,12 +544,38 @@ export const translations = {
       source: 'Fuente',
       sources: { All: 'Todas', Solar: 'Solar', Grid: 'Red', Battery: 'Batería' },
       stats: { usage: 'Uso', cost: 'Costo', avg: 'Prom', economyTitle: 'Economía' },
-      charts: { usageTrend: 'Tendencia de Uso', costVsFree: 'Costo x Mercado', captive: 'Cautivo', free: 'Libre', economy: 'Economía' },
-      ai: { title: 'Insights de IA', subtitle: 'Análisis Gemini', refresh: 'Actualizar', loading: 'Pensando...', default: 'Esperando datos...' }
+      charts: { 
+        usageTrend: 'Tendencia de Uso', 
+        costVsFree: 'Costo x Mercado', 
+        captive: 'Cautivo', 
+        free: 'Libre', 
+        economy: 'Economía',
+        annualGross: 'Economía Anual Bruta',
+        monthlyGross: 'Economía Mensual Bruta',
+        monthlySavings: 'Historial de Ahorros',
+        captiveVsFree: 'Cautivo x Livre',
+        estimates: 'Comparación de Estimaciones',
+        mwhPrice: 'Precio por MWh',
+        indicator: 'Historial de Indicadores'
+      },
+      accumulated: 'Acumulado Actual',
+      refreshAll: 'Actualizar Todo',
+      refreshingAll: 'Actualizando Todo...',
+      pldUnit: 'R$/MWh',
+      ai: { 
+        title: 'Insights de IA', 
+        subtitle: 'Análisis Gemini', 
+        refresh: 'Actualizar', 
+        loading: 'Pensando...', 
+        default: 'Esperando datos...',
+        prompt: 'Haga clic en el icono de Actualizar arriba para generar Insights de IA para sus datos de energía actuales.'
+      }
     },
     economy: {
       title: 'Rendimiento Económico',
       subtitle: 'Analice sus ahorros y tendencias del mercado',
+      emptyTitle: "¿Dónde están los datos?",
+      emptySubtitle: 'No se encontraron registros para el período seleccionado.',
       tabs: {
         annual: 'Bruto Anual',
         monthly: 'Bruto Mensual',
@@ -403,7 +585,8 @@ export const translations = {
     },
     telemetry: {
       title: 'Telemetría',
-      subtitle: 'Consumo en tiempo real y datos técnicos',
+      subtitle: 'Consumo en tempo real y datos técnicos',
+      historicalNotice: 'Vista Histórica: Mostrando puntos del período anterior (no se encontraron datos actuales).',
       tabs: {
         consumption: 'Consumo',
         demand: 'Demanda',
@@ -411,11 +594,36 @@ export const translations = {
       },
       filters: {
         discretization: 'Resolución'
+      },
+      labels: {
+        consumption: 'Consumo (kWh)',
+        reativa: 'Reactiva',
+        contracted: 'Contratada',
+        registered: 'Registrada',
+        tolerance: 'Tolerancia',
+        reference: 'Referencia (0.92)',
+        inductive: 'Inductivo',
+        capacitive: 'Capacitativo'
       }
+    },
+    historical: {
+      compare: 'Comparar Gerações',
+      sourceFilter: 'Filtro de Fonte',
+      usageTitle: 'Uso Histórico',
+      usageSubtitle: 'Comparación de Generación (kWh)',
+      zeroAxis: 'Eje Cero',
+      shrinkToFit: 'Ajustar a los Datos'
     },
     ops: {
       title: 'Resumen de Operaciones',
-      subtitle: 'Transacciones de mercado y contratos',
+      subtitle: 'Transacciones de mercado e contratos',
+      purchase: 'Compra',
+      sale: 'Venda',
+      assignment: 'Cesión',
+      loading: 'Procesando Datos de Mercado...',
+      months: 'Meses',
+      allMonths: 'Todos los Meses',
+      allUnits: 'Todas las Unidades',
       table: {
         month: 'Mes',
         unit: 'Unidad',
@@ -437,12 +645,20 @@ export const translations = {
     sector: {
       title: 'Información Sectorial',
       subtitle: 'Descargue informes y actualizaciones regulatorias',
-      downloadBtn: 'Descargar Informe'
+      downloadBtn: 'Descargar Informe',
+      error: 'Informe aún no disponible.'
     },
     pld: {
       title: 'Precio PLD',
-      subtitle: 'Monitoreo del Precio de Liquidación de Diferencias',
+      subtitle: 'Monitoramiento del Precio de Liquidación de Diferencias',
       loading: 'Cargando datos de precios...',
+      sync: 'Sincronizar Precios',
+      regions: {
+        north: 'Norte',
+        ne: 'NE',
+        se: 'SE/CO',
+        south: 'Sur'
+      },
       tabs: {
         history: 'Historial',
         daily: 'Diario',
@@ -484,6 +700,11 @@ export const translations = {
       agreeNote: 'Al hacer clic en aceptar, confirma que ha leído y aceptado nuestros Términos de uso y Política de privacidad.',
       agree: 'Acepto',
       disagree: 'No acepto'
+    },
+    static: {
+      infoUnavailable: 'Información temporalmente no disponible.',
+      checkBackLater: 'Por favor, intente actualizar la página o vuelva más tarde.',
+      noFaq: 'No hay preguntas frecuentes disponibles.'
     }
   }
 };

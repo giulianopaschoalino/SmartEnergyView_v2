@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Lock, ArrowLeft, ShieldCheck } from 'lucide-react';
 
@@ -24,20 +23,22 @@ const ProfileView: React.FC<ProfileViewProps> = ({ name, profilePhotoUrl, email,
   };
 
   const renderLargeAvatar = () => {
-    const sizeClass = "w-48 h-48";
+    const sizeClass = "w-56 h-56";
     if (profilePhotoUrl && !imgError) {
       return (
-        <img 
-          src={profilePhotoUrl} 
-          alt={name || "User Profile"} 
-          onError={() => setImgError(true)}
-          className={`${sizeClass} rounded-[48px] object-cover bg-white dark:bg-white/10 border-4 border-white dark:border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.2)] ring-1 ring-black/5`}
-        />
+        <div className={`${sizeClass} rounded-[56px] overflow-hidden bg-slate-100 dark:bg-white/10 border-4 border-white dark:border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.2)] ring-1 ring-black/5 flex items-center justify-center`}>
+          <img 
+            src={profilePhotoUrl} 
+            alt={name || "User Profile"} 
+            onError={() => setImgError(true)}
+            className="w-full h-full object-contain"
+          />
+        </div>
       );
     }
     const initial = (name?.[0] || email?.[0] || 'U').toUpperCase();
     return (
-      <div className={`${sizeClass} bg-gradient-to-br from-yinmn to-bondi rounded-[48px] flex items-center justify-center text-white text-7xl font-black shadow-[0_30px_60px_rgba(0,0,0,0.2)] ring-1 ring-black/5`}>
+      <div className={`${sizeClass} bg-gradient-to-br from-yinmn to-bondi rounded-[56px] flex items-center justify-center text-white text-8xl font-black shadow-[0_30px_60px_rgba(0,0,0,0.2)] ring-1 ring-black/5`}>
         {initial}
       </div>
     );
@@ -82,7 +83,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ name, profilePhotoUrl, email,
             <div className="relative">
               <input 
                 type="text" 
-                value={name || ''} 
+                value={name || t.verifiedUser || ''} 
                 readOnly
                 className="w-full px-5 py-4 bg-black/5 dark:bg-black/30 border border-transparent rounded-2xl text-slate-500 dark:text-slate-400 font-bold cursor-not-allowed focus:ring-0 outline-none"
               />
