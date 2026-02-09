@@ -1,9 +1,37 @@
+
 import React from 'react';
 import { RefreshCw } from 'lucide-react';
 
 /**
+ * Skeleton Primitive for loading states
+ * Added style prop to support dynamic styles like variable heights in charts
+ */
+export const Skeleton: React.FC<{ className?: string; style?: React.CSSProperties }> = ({ className = "", style }) => (
+  <div style={style} className={`bg-slate-200/60 dark:bg-white/5 animate-pulse rounded-xl ${className}`} />
+);
+
+/**
+ * Card Skeleton for Dashboard widgets
+ */
+export const CardSkeleton: React.FC = () => (
+  <div className="glass p-6 md:p-8 rounded-[40px] border border-black/5 dark:border-white/10 flex flex-col h-[350px]">
+    <div className="flex justify-between mb-6">
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-3 w-48" />
+      </div>
+      <Skeleton className="w-10 h-10 rounded-2xl" />
+    </div>
+    <div className="flex-1 flex items-end gap-2 px-2">
+      {[...Array(6)].map((_, i) => (
+        <Skeleton key={i} className="flex-1 rounded-t-lg" style={{ height: `${20 + Math.random() * 60}%` }} />
+      ))}
+    </div>
+  </div>
+);
+
+/**
  * Standard Section Card with Apple-inspired glassmorphism
- * Enhanced with native refresh support
  */
 export const SectionCard: React.FC<{
   title?: string;
@@ -42,7 +70,6 @@ export const SectionCard: React.FC<{
 
 /**
  * Performance-focused Avatar component with robust fallback.
- * size increased and object-contain used to preserve aspect ratio.
  */
 export const Avatar: React.FC<{
   src?: string;

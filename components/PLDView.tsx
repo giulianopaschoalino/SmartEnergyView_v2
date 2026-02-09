@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend 
 } from 'recharts';
 import { Globe, RefreshCcw, Maximize2, Minimize2 } from 'lucide-react';
 import { fetchPLDData } from '../services/dataService.ts';
+import { Skeleton } from './UIProvider.tsx';
 
 interface PLDViewProps {
   t: any;
@@ -80,8 +82,25 @@ const PLDView: React.FC<PLDViewProps> = ({ t, lang }) => {
 
       <div className="glass p-6 md:p-10 rounded-[48px] shadow-xl border border-black/5 dark:border-white/10 bg-white dark:bg-night min-h-[600px] overflow-hidden">
         {loading ? (
-          <div className="h-[500px] flex items-center justify-center">
-            <RefreshCcw className="animate-spin text-yinmn w-10 h-10 opacity-20" />
+          <div className="h-[500px] w-full flex items-center justify-center">
+            {activeTab === 0 ? (
+              <div className="w-full space-y-4">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="flex gap-4">
+                    <Skeleton className="h-10 flex-1" />
+                    <Skeleton className="h-10 flex-1" />
+                    <Skeleton className="h-10 flex-1" />
+                    <Skeleton className="h-10 flex-1" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="w-full h-full flex items-end px-10 gap-2">
+                {[...Array(24)].map((_, i) => (
+                  <Skeleton key={i} className="flex-1 rounded-t-lg" style={{ height: `${20 + Math.random() * 70}%` }} />
+                ))}
+              </div>
+            )}
           </div>
         ) : activeTab === 0 ? (
           <div className="h-[500px] overflow-y-auto custom-scrollbar pr-4">

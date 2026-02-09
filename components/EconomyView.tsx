@@ -1,10 +1,12 @@
+
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { 
   BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, Legend, Line, ComposedChart, LineChart 
+  ResponsiveContainer, Legend, Line, ComposedChart, LineChart, LabelList
 } from 'recharts';
 import { EnergyRecord } from '../types.ts';
 import { fetchEconomyData } from '../services/dataService.ts';
+import { Skeleton } from './UIProvider.tsx';
 import { RefreshCw } from 'lucide-react';
 import { getLastConsolidatedYear, populateGraphDataForYear } from '../utils/dataProcessing.ts';
 
@@ -18,7 +20,7 @@ interface EconomyViewProps {
 const EconomyView: React.FC<EconomyViewProps> = ({ data, t, lang, selectedUnit }) => {
   const [activeTab, setActiveTab] = useState(1); 
   const [remoteData, setRemoteData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const economyT = t.economy;
   const dashboardT = t.dashboard;
@@ -54,14 +56,23 @@ const EconomyView: React.FC<EconomyViewProps> = ({ data, t, lang, selectedUnit }
     const raw = Array.isArray(remoteData) ? remoteData : [];
     if (raw.length === 0) return [];
 
+    let runningMax = 0;
+
     if (activeTab === 0) {
-      return raw.map(item => ({
-        label: item.ano,
-        consolidated: parseFloat(String(item.economia_acumulada || 0)) / 1000,
-        estimated: 0,
-        total: parseFloat(String(item.economia_acumulada || 0)) / 1000,
-        isEstimated: item.dad_estimado === true || Number(item.dad_estimado) === 1 || item.dad_estimado === "true"
-      }));
+      const sortedAnnual = [...raw].sort((a, b) => parseInt(a.ano) - parseInt(b.ano));
+      return sortedAnnual.map(item => {
+        let val = parseFloat(String(item.economia_acumulada || 0));
+        if (val < runningMax) val = runningMax;
+        runningMax = val;
+
+        return {
+          label: item.ano,
+          consolidated: val / 1000,
+          estimated: 0,
+          total: val / 1000,
+          isEstimated: item.dad_estimado === true || Number(item.dad_estimado) === 1 || item.dad_estimado === "true"
+        };
+      });
     }
 
     const lastYear = getLastConsolidatedYear(raw, true);
@@ -69,7 +80,12 @@ const EconomyView: React.FC<EconomyViewProps> = ({ data, t, lang, selectedUnit }
 
     return populated.map(item => {
       const isEst = item.dad_estimado === true || Number(item.dad_estimado) === 1 || item.dad_estimado === "true";
-      const valAcum = parseFloat(String(item.economia_acumulada || 0)) / 1000;
+      
+      let valAcum = parseFloat(String(item.economia_acumulada || 0));
+      if (valAcum < runningMax) valAcum = runningMax;
+      runningMax = valAcum;
+
+      const valAcumScaled = valAcum / 1000;
       const valMensal = parseFloat(String(item.economia_mensal || 0)) / 1000;
       const valCativo = parseFloat(String(item.custo_cativo || 0)) / 1000;
       const valLivre = parseFloat(String(item.custo_livre || 0)) / 1000;
@@ -77,9 +93,9 @@ const EconomyView: React.FC<EconomyViewProps> = ({ data, t, lang, selectedUnit }
 
       return {
         label: item.mes,
-        consolidated: !isEst ? valAcum : 0,
-        estimated: isEst ? valAcum : 0,
-        total: valAcum,
+        consolidated: !isEst ? valAcumScaled : 0,
+        estimated: isEst ? valAcumScaled : 0,
+        total: valAcumScaled,
         cativo: valCativo,
         livre: valLivre,
         mensal: valMensal,
@@ -90,6 +106,14 @@ const EconomyView: React.FC<EconomyViewProps> = ({ data, t, lang, selectedUnit }
   }, [remoteData, activeTab]);
 
   const currencyPrefix = lang === 'pt' ? 'R$' : '$';
+
+  const commonLabelProps = {
+    position: 'top' as const,
+    fill: '#94A3B8',
+    fontSize: 9,
+    fontWeight: 'bold',
+    offset: 8
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 animate-in fade-in duration-500 pb-24">
@@ -124,8 +148,12 @@ const EconomyView: React.FC<EconomyViewProps> = ({ data, t, lang, selectedUnit }
 
       <div className="glass p-6 md:p-10 rounded-[48px] shadow-xl border border-black/5 dark:border-white/10 bg-white dark:bg-night">
         {loading ? (
-          <div className="h-[500px] flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-yinmn border-t-transparent rounded-full animate-spin"></div>
+          <div className="h-[500px] flex flex-col items-center justify-center space-y-8">
+            <div className="w-full h-full flex items-end gap-3 px-10">
+              {[...Array(12)].map((_, i) => (
+                <Skeleton key={i} className="flex-1 rounded-t-xl" style={{ height: `${30 + Math.random() * 50}%` }} />
+              ))}
+            </div>
           </div>
         ) : chartSource.length === 0 ? (
           <div className="h-[500px] flex items-center justify-center text-center p-8">
@@ -139,7 +167,7 @@ const EconomyView: React.FC<EconomyViewProps> = ({ data, t, lang, selectedUnit }
           <div className="h-[500px] w-full relative">
             <ResponsiveContainer width="100%" height="100%">
               {activeTab < 2 ? (
-                <BarChart data={chartSource}>
+                <BarChart data={chartSource} margin={{ top: 25 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
                   <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 800, fill: '#94A3B8'}} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 800, fill: '#94A3B8'}} domain={[0, 'auto']} />
@@ -154,10 +182,16 @@ const EconomyView: React.FC<EconomyViewProps> = ({ data, t, lang, selectedUnit }
                       <Cell key={`cell-free-${index}`} fill={entry.isEstimated ? 'url(#stripes-primary)' : '#375785'} />
                     ))}
                   </Bar>
-                  <Bar name={dashboardT.charts.captive} dataKey="estimated" stackId="stack" fill="url(#stripes-light)" radius={[6, 6, 0, 0]} />
+                  <Bar name={dashboardT.charts.captive} dataKey="estimated" stackId="stack" fill="url(#stripes-light)" radius={[6, 6, 0, 0]}>
+                    <LabelList 
+                      dataKey="total" 
+                      {...commonLabelProps}
+                      formatter={(val: number) => val > 0 ? `${currencyPrefix}${val.toFixed(1)}k` : ''}
+                    />
+                  </Bar>
                 </BarChart>
               ) : activeTab === 2 ? (
-                <ComposedChart data={chartSource}>
+                <ComposedChart data={chartSource} margin={{ top: 25 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
                   <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 800, fill: '#94A3B8'}} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 800, fill: '#94A3B8'}} domain={[0, 'auto']} />
@@ -175,6 +209,11 @@ const EconomyView: React.FC<EconomyViewProps> = ({ data, t, lang, selectedUnit }
                     {chartSource.map((entry, index) => (
                       <Cell key={`cell-livre-${index}`} fill={entry.isEstimated ? 'url(#stripes-primary)' : '#375785'} />
                     ))}
+                    <LabelList 
+                      dataKey="livre" 
+                      {...commonLabelProps}
+                      formatter={(val: number) => `${val.toFixed(1)}k`}
+                    />
                   </Bar>
                   <Line name={dashboardT.charts.monthlySavings} type="monotone" dataKey="mensal" stroke="#0C9200" strokeWidth={3} dot={{r: 4, fill: '#FFF', stroke: '#0C9200', strokeWidth: 2}} />
                 </ComposedChart>

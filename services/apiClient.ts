@@ -1,4 +1,6 @@
 
+import { fetchTelemetryMock } from './dataService.ts';
+
 /**
  * Mock API Client for Smart Energia Prototype
  * Simulates network delays and returns hardcoded responses.
@@ -24,6 +26,13 @@ export class ApiClient {
 
   static async post<T>(endpoint: string, body?: any): Promise<T> {
     console.log(`Mock POST: ${endpoint}`, body);
+    
+    // Route telemetry calls to the dedicated mock generator
+    if (endpoint.includes('telemetry/')) {
+      const data = await fetchTelemetryMock(endpoint, body);
+      return this.simulateNetwork(data as unknown as T, 800);
+    }
+
     return this.simulateNetwork({} as T);
   }
 

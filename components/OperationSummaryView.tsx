@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { UserSession } from '../types.ts';
 import { fetchOperationSummary, exportToCSV } from '../services/dataService.ts';
 import { ApiClient } from '../services/apiClient.ts';
+import { Skeleton } from './UIProvider.tsx';
 import { FileText, Download, ArrowUpRight, ArrowDownLeft, RefreshCw, Calendar } from 'lucide-react';
 
 interface OperationSummaryViewProps {
@@ -141,7 +143,17 @@ const OperationSummaryView: React.FC<OperationSummaryViewProps> = ({ session, t,
             </thead>
             <tbody className="divide-y divide-black/5 dark:divide-white/5">
               {loading ? (
-                <tr><td colSpan={7} className="py-20 text-center text-xs font-black uppercase tracking-widest text-slate-300 animate-pulse">{t.loading}</td></tr>
+                [...Array(6)].map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-6"><Skeleton className="h-4 w-12" /></td>
+                    <td className="px-6 py-6"><Skeleton className="h-4 w-24" /></td>
+                    <td className="px-6 py-6"><Skeleton className="h-6 w-20 rounded-lg" /></td>
+                    <td className="px-6 py-6"><Skeleton className="h-4 w-32" /></td>
+                    <td className="px-6 py-6"><Skeleton className="h-4 w-16 ml-auto" /></td>
+                    <td className="px-6 py-6"><Skeleton className="h-4 w-16 ml-auto" /></td>
+                    <td className="px-6 py-6"><Skeleton className="h-4 w-20 ml-auto" /></td>
+                  </tr>
+                ))
               ) : operations.length === 0 ? (
                 <tr><td colSpan={7} className="py-20 text-center text-xs font-black uppercase tracking-widest text-slate-300">{t.common?.noData || 'No operations found'}</td></tr>
               ) : operations.map((op, idx) => {

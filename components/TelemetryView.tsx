@@ -1,10 +1,12 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, BarChart, Bar, Cell, LineChart, Line, Legend, ComposedChart
+  ResponsiveContainer, BarChart, Bar, Cell, LineChart, Line, Legend, ComposedChart, LabelList
 } from 'recharts';
 import { UserSession } from '../types.ts';
 import { ApiClient } from '../services/apiClient.ts';
+import { Skeleton } from './UIProvider.tsx';
 import { Activity, Calendar, AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface TelemetryViewProps {
@@ -20,7 +22,7 @@ const TelemetryView: React.FC<TelemetryViewProps> = ({ session, t, lang, selecte
   
   const [activeTab, setActiveTab] = useState(0);
   const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFallback, setIsFallback] = useState(false);
   
@@ -71,7 +73,6 @@ const TelemetryView: React.FC<TelemetryViewProps> = ({ session, t, lang, selecte
         { type: "between", field: "dia_num", value: [effectiveStart.toISOString().split('T')[0], effectiveEnd.toISOString().split('T')[0]] }
       ];
 
-      // Add unit filter if selected
       if (selectedUnit?.codigo_scde) {
         endpointFilters.push({ type: "=", field: "med_5min.ponto", value: selectedUnit.codigo_scde });
       }
@@ -130,6 +131,14 @@ const TelemetryView: React.FC<TelemetryViewProps> = ({ session, t, lang, selecte
     });
     return max * 1.1 || 1;
   }, [data, activeTab]);
+
+  const commonLabelProps = {
+    position: 'top' as const,
+    fill: '#94A3B8',
+    fontSize: 9,
+    fontWeight: 'bold',
+    offset: 8
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 animate-in fade-in duration-500 pb-24">
@@ -190,13 +199,13 @@ const TelemetryView: React.FC<TelemetryViewProps> = ({ session, t, lang, selecte
       </div>
 
       <div className="glass p-6 md:p-10 rounded-[48px] shadow-xl border border-black/5 dark:border-white/10 bg-white dark:bg-night min-h-[600px] relative">
-        {loading && (
-          <div className="absolute inset-0 bg-white/40 dark:bg-black/40 backdrop-blur-sm z-10 flex items-center justify-center rounded-[48px]">
-            <div className="w-10 h-10 border-4 border-yinmn border-t-transparent rounded-full animate-spin"></div>
+        {loading ? (
+          <div className="h-[500px] w-full flex items-end gap-1 px-4">
+            {[...Array(30)].map((_, i) => (
+              <Skeleton key={i} className="flex-1 rounded-t-md" style={{ height: `${10 + Math.random() * 80}%` }} />
+            ))}
           </div>
-        )}
-
-        {error ? (
+        ) : error ? (
           <div className="h-[500px] flex flex-col items-center justify-center text-center p-6 space-y-4">
             <AlertTriangle className="w-10 h-10 text-gamboge" />
             <p className="text-sm font-bold text-slate-600 dark:text-slate-400 max-w-xs">{error}</p>
@@ -207,7 +216,7 @@ const TelemetryView: React.FC<TelemetryViewProps> = ({ session, t, lang, selecte
           <div className="h-[500px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               {activeTab === 0 ? (
-                <ComposedChart data={data}>
+                <ComposedChart data={data} margin={{ top: 25 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
                   <XAxis dataKey="day_formatted" axisLine={false} tickLine={false} tick={{fontSize: 9, fontStretch: 'expanded', fontWeight: 700, fill: '#94A3B8'}} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: '#94A3B8'}} domain={[0, chartMax]} />
@@ -217,11 +226,16 @@ const TelemetryView: React.FC<TelemetryViewProps> = ({ session, t, lang, selecte
                     {data.map((entry, index) => (
                       <Cell key={`cell-consumption-${index}`} fill={entry.isEstimated ? 'url(#stripes-telemetry)' : '#74ACEC'} />
                     ))}
+                    <LabelList 
+                      dataKey="consumo" 
+                      {...commonLabelProps}
+                      formatter={(val: number) => val > 0 ? `${val.toFixed(0)}` : ''}
+                    />
                   </Bar>
                   <Line name={telemetryT.labels.reativa} type="monotone" dataKey="reativa" stroke="#FF0000" strokeDasharray="5 5" dot={false} strokeWidth={2} />
                 </ComposedChart>
               ) : activeTab === 1 ? (
-                <ComposedChart data={data}>
+                <ComposedChart data={data} margin={{ top: 25 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
                   <XAxis dataKey="day_formatted" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 700, fill: '#94A3B8'}} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: '#94A3B8'}} domain={[0, chartMax]} />
@@ -231,6 +245,11 @@ const TelemetryView: React.FC<TelemetryViewProps> = ({ session, t, lang, selecte
                     {data.map((entry, index) => (
                       <Cell key={`cell-demand-${index}`} fill={entry.isEstimated ? 'url(#stripes-primary)' : '#375785'} />
                     ))}
+                    <LabelList 
+                      dataKey="dem_reg" 
+                      {...commonLabelProps}
+                      formatter={(val: number) => val > 0 ? `${val.toFixed(0)}` : ''}
+                    />
                   </Bar>
                   <Line name={telemetryT.labels.tolerance} type="monotone" dataKey="dem_tolerancia" stroke="#FF0000" strokeDasharray="5 5" dot={false} strokeWidth={2} />
                   <Line name={telemetryT.labels.contracted} type="monotone" dataKey="dem_cont" stroke="#000000" strokeDasharray="5 5" dot={false} strokeWidth={2} />

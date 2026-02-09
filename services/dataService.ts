@@ -20,6 +20,67 @@ const generateMockTelemetry = (days: number): EnergyRecord[] => {
   return data;
 };
 
+/**
+ * Generates mock data specifically for the Telemetry View technical charts.
+ */
+export const fetchTelemetryMock = async (endpoint: string, config: any): Promise<any[]> => {
+  const { type, filters } = config;
+  const data: any[] = [];
+  
+  // Try to extract date range from filters
+  let startDate = new Date();
+  let endDate = new Date();
+  const dateFilter = filters?.find((f: any) => f.field === 'dia_num' && f.type === 'between');
+  if (dateFilter) {
+    startDate = new Date(dateFilter.value[0]);
+    endDate = new Date(dateFilter.value[1]);
+  } else {
+    startDate.setDate(startDate.getDate() - 7);
+  }
+
+  const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+
+  // Generate points based on discretization
+  let points = diffDays;
+  if (type === '1_hora') points = diffDays * 24;
+  if (type === '5_min') points = diffDays * 288;
+  if (type === '15_min') points = diffDays * 96;
+
+  // Limit safety
+  points = Math.min(points, 500);
+
+  for (let i = 0; i < points; i++) {
+    const pointDate = new Date(startDate);
+    if (type === '1_hora') pointDate.setHours(pointDate.getHours() + i);
+    else if (type === '1_dia') pointDate.setDate(pointDate.getDate() + i);
+    else if (type === '1_mes') pointDate.setMonth(pointDate.getMonth() + i);
+    else pointDate.setMinutes(pointDate.getMinutes() + i * (type === '5_min' ? 5 : 15));
+
+    const dayStr = pointDate.toISOString().split('T')[0];
+    const timeStr = pointDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    data.push({
+      dia_num: dayStr,
+      day_formatted: type.includes('min') || type === '1_hora' ? `${dayStr} ${timeStr}` : dayStr,
+      // Consumption
+      consumo: 50 + Math.random() * 100,
+      reativa: 5 + Math.random() * 15,
+      // Demand
+      dem_cont: 150,
+      dem_reg: 130 + Math.random() * 40,
+      dem_tolerancia: 150 * 1.05,
+      // Power Factor
+      fp_indutivo: 0.92 + Math.random() * 0.06,
+      fp_capacitivo: 0.94 + Math.random() * 0.04,
+      f_ref: 0.92,
+      dad_estimado: false
+    });
+  }
+
+  return data;
+};
+
 export const authService = {
   login: async (credentials: any) => {
     return new Promise((resolve) => {
