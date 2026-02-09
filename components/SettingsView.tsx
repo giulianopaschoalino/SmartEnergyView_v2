@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Language } from '../types.ts';
 import { Lock, LogOut, ChevronRight } from 'lucide-react';
@@ -135,7 +136,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ theme, setTheme, language, 
               <p className="text-xs text-slate-600 dark:text-slate-400 font-medium uppercase tracking-widest opacity-80 mt-1">{t.languageDesc}</p>
             </div>
             <div className="flex p-1 bg-black/5 dark:bg-night rounded-2xl w-full sm:w-fit border border-black/5 dark:border-slate-800">
-              {(['en', 'pt', 'es'] as const).map((lang) => (
+              {(['pt', 'en', 'es'] as const).map((lang) => (
                 <button
                   key={lang}
                   onClick={() => setLanguage(lang)}

@@ -1,240 +1,5 @@
+
 export const translations = {
-  en: {
-    nav: {
-      dashboard: 'Overview',
-      economy: 'Economy',
-      telemetry: 'Telemetry',
-      operation_summary: 'Ops Summary',
-      news: 'News',
-      pld: 'PLD Price',
-      sectorial_info: 'Sector Info',
-      notifications: 'Notifications',
-      about_us: 'About Us',
-      faq: 'FAQ',
-      settings: 'Settings',
-      premium: 'Premium',
-      logout: 'Log Out'
-    },
-    common: {
-      all: 'All',
-      units: 'Units',
-      allUnits: 'All Units',
-      date: 'Date',
-      loading: 'Loading...',
-      noData: 'No data available.',
-      download: 'Download',
-      back: 'Back',
-      verified: 'Verified by Provider',
-      locked: 'Identity Locked',
-      refresh: 'Refresh',
-      reload: 'Reload',
-      updating: 'Updating...',
-      fetching: 'Fetching...',
-      tryAgain: 'Try Again',
-      more: 'More'
-    },
-    settings: {
-      title: 'Settings',
-      subtitle: 'Manage account & preferences',
-      profile: 'Account Profile',
-      premium: 'Premium Subscriber',
-      edit: 'Manage',
-      accountID: 'Account Identifier',
-      identityNotice: 'Managed by central provider',
-      appearance: 'Appearance',
-      theme: 'Theme Preference',
-      themeDesc: 'Choose your visual style',
-      language: 'Language',
-      languageDesc: 'Preferred app language',
-      notifications: 'Notifications',
-      alerts: 'Usage Alerts',
-      alertsDesc: 'Notify when over limit',
-      summary: 'Weekly Summary',
-      summaryDesc: 'Monday cost reports',
-      logout: 'Log Out',
-      version: 'Smart Energia Insight • v2.0.4 • Build 108'
-    },
-    profile: {
-      title: 'My Profile',
-      subtitle: 'Verified information',
-      personalDetails: 'Personal Details',
-      name: 'Legal Name',
-      email: 'Email Address',
-      membership: 'Plan Status',
-      membershipDesc: 'Active since 2023',
-      save: 'Close',
-      cancel: 'Back',
-      verifiedUser: 'Verified User'
-    },
-    dashboard: {
-      title: 'Overview',
-      subtitle: 'Performance at a glance',
-      source: 'Source',
-      sources: { All: 'All', Solar: 'Solar', Grid: 'Grid', Battery: 'Battery' },
-      stats: { usage: 'Usage', cost: 'Cost', avg: 'Avg', economyTitle: 'Economy' },
-      charts: { 
-        usageTrend: 'Usage Trend', 
-        costVsFree: 'Cost vs Market', 
-        captive: 'Captive', 
-        free: 'Free', 
-        economy: 'Economy',
-        annualGross: 'Annual Gross Economy',
-        monthlyGross: 'Monthly Gross Economy',
-        monthlySavings: 'Savings History',
-        captiveVsFree: 'Captive x Livre',
-        estimates: 'Estimates Comparison',
-        mwhPrice: 'Price per MWh',
-        indicator: 'Indicator History'
-      },
-      accumulated: 'Current Accumulated',
-      refreshAll: 'Update Everything',
-      refreshingAll: 'Refreshing All...',
-      pldUnit: 'R$/MWh',
-      ai: { 
-        title: 'AI Insights', 
-        subtitle: 'Gemini Analysis', 
-        refresh: 'Update', 
-        loading: 'Thinking...', 
-        default: 'Awaiting data...',
-        prompt: 'Click the Refresh icon above to generate AI Insights for your current energy data.'
-      }
-    },
-    economy: {
-      title: 'Economic Performance',
-      subtitle: 'Analyze your savings and market trends',
-      emptyTitle: "Where's the data?",
-      emptySubtitle: 'No records found for the selected period.',
-      tabs: {
-        annual: 'Annual Gross',
-        monthly: 'Monthly Gross',
-        captiveVsFree: 'Captive vs Free',
-        costMWh: 'Cost per MWh'
-      }
-    },
-    telemetry: {
-      title: 'Telemetry',
-      subtitle: 'Real-time consumption and technical data',
-      historicalNotice: 'Historical View: Displaying points from previous period (no current data found).',
-      tabs: {
-        consumption: 'Consumption',
-        demand: 'Demand',
-        powerFactor: 'Factor de Potencia'
-      },
-      filters: {
-        discretization: 'Resolution'
-      },
-      labels: {
-        consumption: 'Consumption (kWh)',
-        reativa: 'Reactive',
-        contracted: 'Contracted',
-        registered: 'Registered',
-        tolerance: 'Tolerance',
-        reference: 'Reference (0.92)',
-        inductive: 'Inductive',
-        capacitive: 'Capacitive'
-      }
-    },
-    historical: {
-      compare: 'Compare Generations',
-      sourceFilter: 'Source Filter',
-      usageTitle: 'Historical Usage',
-      usageSubtitle: 'Generation Comparison (kWh)',
-      zeroAxis: 'Zero Axis',
-      shrinkToFit: 'Shrink to Fit'
-    },
-    ops: {
-      title: 'Operation Summary',
-      subtitle: 'Market transactions and contracts',
-      purchase: 'Purchase',
-      sale: 'Sale',
-      assignment: 'Assignment',
-      loading: 'Processing Market Data...',
-      months: 'Months',
-      allMonths: 'All Months',
-      allUnits: 'All Units',
-      table: {
-        month: 'Month',
-        unit: 'Unit',
-        op: 'Operation',
-        counterparty: 'Counterparty',
-        amount: 'Amount',
-        price: 'Price',
-        total: 'Total Value'
-      }
-    },
-    news: {
-      title: 'Energy News',
-      subtitle: 'Stay updated with sector trends',
-      article: 'Article',
-      by: 'By',
-      processing: 'Loading news...',
-      scrollForMore: 'Scroll for more'
-    },
-    sector: {
-      title: 'Sectorial Information',
-      subtitle: 'Download reports and regulatory updates',
-      downloadBtn: 'Download Report',
-      error: 'Report not available yet.'
-    },
-    pld: {
-      title: 'PLD Price',
-      subtitle: 'Market Clearing Price monitoring',
-      loading: 'Loading price data...',
-      sync: 'Sync Price Data',
-      regions: {
-        north: 'North',
-        ne: 'NE',
-        se: 'SE/CO',
-        south: 'South'
-      },
-      tabs: {
-        history: 'Historical',
-        daily: 'Daily',
-        hourly: 'Hourly'
-      }
-    },
-    login: {
-      subtitle: 'Welcome back to Smart Energia',
-      signUpSubtitle: 'Join our energy efficiency network',
-      resetSubtitle: 'Recover your account access',
-      resetSuccess: 'Password reset link sent to your email',
-      fullName: 'Full Name',
-      placeholderName: 'John Doe',
-      identity: 'Email Address',
-      placeholderEmail: 'email@example.com',
-      credentials: 'Password',
-      placeholderPassword: '••••••••',
-      confirmPassword: 'Confirm Password',
-      keepLoggedIn: 'Keep me logged in',
-      recovery: 'Forgot password?',
-      signIn: 'Sign In',
-      createAccount: 'Create Account',
-      sendReset: 'Send Reset Link',
-      newHere: 'New to Smart Energia?',
-      alreadyHaveAccount: 'Already have an account?'
-    },
-    policy: {
-      lastUpdated: 'October 2023',
-      title: 'Privacy & Terms',
-      intro: 'We value your data privacy and security. By using our platform, you agree to our data handling practices.',
-      point1Title: 'Efficiency First',
-      point1Desc: 'We use your data to optimize energy consumption and reduce costs.',
-      point2Title: 'Secure Storage',
-      point2Desc: 'Your information is encrypted and stored in secure data centers.',
-      point3Title: 'Data Control',
-      point3Desc: 'You have full control over your telemetry history and preferences.',
-      point4Title: 'Compliance',
-      point4Desc: 'We follow LGPD and international privacy standards.',
-      agreeNote: 'By clicking agree, you confirm that you have read and accepted our Terms of Use and Privacy Policy.',
-      agree: 'I Agree',
-      disagree: 'I Disagree'
-    },
-    static: {
-      infoUnavailable: 'Information temporarily unavailable.',
-      checkBackLater: 'Please try refreshing the page or check back later.',
-      noFaq: 'No frequently asked questions available.'
-    }
-  },
   pt: {
     nav: {
       dashboard: 'Visão Geral',
@@ -471,6 +236,242 @@ export const translations = {
       noFaq: 'Nenhuma pergunta frequente disponível.'
     }
   },
+  en: {
+    nav: {
+      dashboard: 'Overview',
+      economy: 'Economy',
+      telemetry: 'Telemetry',
+      operation_summary: 'Ops Summary',
+      news: 'News',
+      pld: 'PLD Price',
+      sectorial_info: 'Sector Info',
+      notifications: 'Notifications',
+      about_us: 'About Us',
+      faq: 'FAQ',
+      settings: 'Settings',
+      premium: 'Premium',
+      logout: 'Log Out'
+    },
+    common: {
+      all: 'All',
+      units: 'Units',
+      allUnits: 'All Units',
+      date: 'Date',
+      loading: 'Loading...',
+      noData: 'No data available.',
+      download: 'Download',
+      back: 'Back',
+      verified: 'Verified by Provider',
+      locked: 'Identity Locked',
+      refresh: 'Refresh',
+      reload: 'Reload',
+      updating: 'Updating...',
+      fetching: 'Fetching...',
+      tryAgain: 'Try Again',
+      more: 'More'
+    },
+    settings: {
+      title: 'Settings',
+      subtitle: 'Manage account & preferences',
+      profile: 'Account Profile',
+      premium: 'Premium Subscriber',
+      edit: 'Manage',
+      accountID: 'Account Identifier',
+      identityNotice: 'Managed by central provider',
+      appearance: 'Appearance',
+      theme: 'Theme Preference',
+      themeDesc: 'Choose your visual style',
+      language: 'Language',
+      languageDesc: 'Preferred app language',
+      notifications: 'Notifications',
+      alerts: 'Usage Alerts',
+      alertsDesc: 'Notify when over limit',
+      summary: 'Weekly Summary',
+      summaryDesc: 'Monday cost reports',
+      logout: 'Log Out',
+      version: 'Smart Energia Insight • v2.0.4 • Build 108'
+    },
+    profile: {
+      title: 'My Profile',
+      subtitle: 'Verified information',
+      personalDetails: 'Personal Details',
+      name: 'Legal Name',
+      email: 'Email Address',
+      membership: 'Plan Status',
+      membershipDesc: 'Active since 2023',
+      save: 'Close',
+      cancel: 'Back',
+      verifiedUser: 'Verified User'
+    },
+    dashboard: {
+      title: 'Overview',
+      subtitle: 'Performance at a glance',
+      source: 'Source',
+      sources: { All: 'All', Solar: 'Solar', Grid: 'Grid', Battery: 'Battery' },
+      stats: { usage: 'Usage', cost: 'Cost', avg: 'Avg', economyTitle: 'Economy' },
+      charts: { 
+        usageTrend: 'Usage Trend', 
+        costVsFree: 'Cost vs Market', 
+        captive: 'Captive', 
+        free: 'Free', 
+        economy: 'Economy',
+        annualGross: 'Annual Gross Economy',
+        monthlyGross: 'Monthly Gross Economy',
+        monthlySavings: 'Savings History',
+        captiveVsFree: 'Captive x Livre',
+        estimates: 'Estimates Comparison',
+        mwhPrice: 'Price per MWh',
+        indicator: 'Indicator History'
+      },
+      accumulated: 'Current Accumulated',
+      refreshAll: 'Update Everything',
+      refreshingAll: 'Refreshing All...',
+      pldUnit: 'R$/MWh',
+      ai: { 
+        title: 'AI Insights', 
+        subtitle: 'Gemini Analysis', 
+        refresh: 'Update', 
+        loading: 'Thinking...', 
+        default: 'Awaiting data...',
+        prompt: 'Click the Refresh icon above to generate AI Insights for your current energy data.'
+      }
+    },
+    economy: {
+      title: 'Economic Performance',
+      subtitle: 'Analyze your savings and market trends',
+      emptyTitle: "Where's the data?",
+      emptySubtitle: 'No records found for the selected period.',
+      tabs: {
+        annual: 'Annual Gross',
+        monthly: 'Monthly Gross',
+        captiveVsFree: 'Captive vs Free',
+        costMWh: 'Cost per MWh'
+      }
+    },
+    telemetry: {
+      title: 'Telemetry',
+      subtitle: 'Real-time consumption and technical data',
+      historicalNotice: 'Historical View: Displaying points from previous period (no current data found).',
+      tabs: {
+        consumption: 'Consumption',
+        demand: 'Demand',
+        powerFactor: 'Factor de Potencia'
+      },
+      filters: {
+        discretization: 'Resolution'
+      },
+      labels: {
+        consumption: 'Consumption (kWh)',
+        reativa: 'Reactive',
+        contracted: 'Contracted',
+        registered: 'Registered',
+        tolerance: 'Tolerance',
+        reference: 'Reference (0.92)',
+        inductive: 'Inductive',
+        capacitive: 'Capacitive'
+      }
+    },
+    historical: {
+      compare: 'Compare Generations',
+      sourceFilter: 'Source Filter',
+      usageTitle: 'Historical Usage',
+      usageSubtitle: 'Generation Comparison (kWh)',
+      zeroAxis: 'Zero Axis',
+      shrinkToFit: 'Shrink to Fit'
+    },
+    ops: {
+      title: 'Operation Summary',
+      subtitle: 'Market transactions and contracts',
+      purchase: 'Purchase',
+      sale: 'Sale',
+      assignment: 'Assignment',
+      loading: 'Processing Market Data...',
+      months: 'Months',
+      allMonths: 'All Months',
+      allUnits: 'All Units',
+      table: {
+        month: 'Month',
+        unit: 'Unit',
+        op: 'Operation',
+        counterparty: 'Counterparty',
+        amount: 'Amount',
+        price: 'Price',
+        total: 'Total Value'
+      }
+    },
+    news: {
+      title: 'Energy News',
+      subtitle: 'Stay updated with sector trends',
+      article: 'Article',
+      by: 'By',
+      processing: 'Loading news...',
+      scrollForMore: 'Scroll for more'
+    },
+    sector: {
+      title: 'Sectorial Information',
+      subtitle: 'Download reports and regulatory updates',
+      downloadBtn: 'Download Report',
+      error: 'Report not available yet.'
+    },
+    pld: {
+      title: 'PLD Price',
+      subtitle: 'Market Clearing Price monitoring',
+      loading: 'Loading price data...',
+      sync: 'Sync Price Data',
+      regions: {
+        north: 'North',
+        ne: 'NE',
+        se: 'SE/CO',
+        south: 'South'
+      },
+      tabs: {
+        history: 'Historical',
+        daily: 'Daily',
+        hourly: 'Hourly'
+      }
+    },
+    login: {
+      subtitle: 'Welcome back to Smart Energia',
+      signUpSubtitle: 'Join our energy efficiency network',
+      resetSubtitle: 'Recover your account access',
+      resetSuccess: 'Password reset link sent to your email',
+      fullName: 'Full Name',
+      placeholderName: 'John Doe',
+      identity: 'Email Address',
+      placeholderEmail: 'email@example.com',
+      credentials: 'Password',
+      placeholderPassword: '••••••••',
+      confirmPassword: 'Confirm Password',
+      keepLoggedIn: 'Keep me logged in',
+      recovery: 'Forgot password?',
+      signIn: 'Sign In',
+      createAccount: 'Create Account',
+      sendReset: 'Send Reset Link',
+      newHere: 'New to Smart Energia?',
+      alreadyHaveAccount: 'Already have an account?'
+    },
+    policy: {
+      lastUpdated: 'October 2023',
+      title: 'Privacy & Terms',
+      intro: 'We value your data privacy and security. By using our platform, you agree to our data handling practices.',
+      point1Title: 'Efficiency First',
+      point1Desc: 'We use your data to optimize energy consumption and reduce costs.',
+      point2Title: 'Secure Storage',
+      point2Desc: 'Your information is encrypted and stored in secure data centers.',
+      point3Title: 'Data Control',
+      point3Desc: 'You have full control over your telemetry history and preferences.',
+      point4Title: 'Compliance',
+      point4Desc: 'We follow LGPD and international privacy standards.',
+      agreeNote: 'By clicking agree, you confirm that you have read and accepted our Terms of Use and Privacy Policy.',
+      agree: 'I Agree',
+      disagree: 'I Disagree'
+    },
+    static: {
+      infoUnavailable: 'Information temporarily unavailable.',
+      checkBackLater: 'Please try refreshing the page or check back later.',
+      noFaq: 'No frequently asked questions available.'
+    }
+  },
   es: {
     nav: {
       dashboard: 'Resumen',
@@ -533,7 +534,7 @@ export const translations = {
       name: 'Nombre Legal',
       email: 'Correo Electrónico',
       membership: 'Estado del Plan',
-      membershipDesc: 'Activo desde 2023',
+      membershipDesc: 'Ativo desde 2023',
       save: 'Cerrar',
       cancel: 'Volver',
       verifiedUser: 'Usuario Verificado'

@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { StatusBadge } from './UIProvider.tsx';
 import { ChevronRight } from 'lucide-react';
 
@@ -10,93 +11,55 @@ interface NewsItem {
   creator: string;
 }
 
+const MOCK_NEWS: NewsItem[] = [
+  {
+    title: "Brazil's Solar Capacity Reaches New Milestone in 2024",
+    link: "#",
+    pubDate: new Date().toISOString(),
+    description: "The distributed generation sector has seen a 35% increase in installations since the beginning of the year, driven by lower equipment costs and new regulatory incentives.",
+    creator: "Sector Analysis"
+  },
+  {
+    title: "Green Hydrogen: The Next Frontier for Brazilian Industry",
+    link: "#",
+    pubDate: new Date(Date.now() - 86400000).toISOString(),
+    description: "New projects in Ceará and Rio Grande do Norte are positioning Brazil as a global leader in green hydrogen production for European export.",
+    creator: "Energy News"
+  },
+  {
+    title: "Free Energy Market Migration for SMEs: What You Need to Know",
+    link: "#",
+    pubDate: new Date(Date.now() - 172800000).toISOString(),
+    description: "As market opening progresses, small and medium enterprises are finding significant savings by moving away from traditional utility providers.",
+    creator: "Financial Insight"
+  },
+  {
+    title: "The Role of AI in Grid Stabilization",
+    link: "#",
+    pubDate: new Date(Date.now() - 259200000).toISOString(),
+    description: "Predictive analytics and machine learning are becoming essential tools for managing the intermittent nature of renewable energy sources in national grids.",
+    creator: "Tech Reports"
+  },
+  {
+    title: "Wind Power: Offshore Projects Gain Momentum",
+    link: "#",
+    pubDate: new Date(Date.now() - 345600000).toISOString(),
+    description: "Environmental licensing for massive offshore wind farms is speeding up as global investors look for long-term sustainable returns in the Brazilian coast.",
+    creator: "Sustainability Weekly"
+  }
+];
+
 interface NewsViewProps {
   t: any;
 }
 
 const NewsView: React.FC<NewsViewProps> = ({ t }) => {
-  const [allNews, setAllNews] = useState<NewsItem[]>([]);
-  const [displayNews, setDisplayNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  
-  const observerTarget = useRef<HTMLDivElement>(null);
-
-  const parseRSS = useCallback((xmlText: string): NewsItem[] => {
-    try {
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-      if (xmlDoc.getElementsByTagName("parsererror").length > 0) return [];
-
-      const items = xmlDoc.querySelectorAll("item");
-      return Array.from(items).map(item => ({
-        title: item.getElementsByTagName("title")[0]?.textContent || "Untitled",
-        link: item.getElementsByTagName("link")[0]?.textContent || "#",
-        pubDate: item.getElementsByTagName("pubDate")[0]?.textContent || new Date().toISOString(),
-        description: (item.getElementsByTagName("description")[0]?.textContent || "").replace(/<[^>]*>?/gm, '').substring(0, 160) + '...',
-        creator: item.getElementsByTagName("dc:creator")[0]?.textContent || item.getElementsByTagName("creator")[0]?.textContent || "Smart Energia"
-      }));
-    } catch (e) {
-      return [];
-    }
-  }, []);
-
-  const fetchNews = useCallback(async () => {
-    setLoading(true);
-    const feedUrl = 'https://www.smartenergia.com.br/noticias/feed/';
-    const proxies = [
-      `https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}&timestamp=${Date.now()}`,
-      `https://corsproxy.io/?${encodeURIComponent(feedUrl)}`
-    ];
-
-    let items: NewsItem[] = [];
-    for (const proxyUrl of proxies) {
-      try {
-        const response = await fetch(proxyUrl);
-        if (!response.ok) continue;
-        
-        let xmlContent = '';
-        if (proxyUrl.includes("allorigins")) {
-          const json = await response.json();
-          xmlContent = json.contents;
-        } else {
-          xmlContent = await response.text();
-        }
-        
-        const parsed = parseRSS(xmlContent);
-        if (parsed.length > 0) {
-          items = parsed;
-          break;
-        }
-      } catch (err) {
-        console.warn(`Proxy ${proxyUrl} failed:`, err);
-      }
-    }
-
-    setAllNews(items);
-    setDisplayNews(items.slice(0, 9));
-    setLoading(false);
-  }, [parseRSS]);
-
-  useEffect(() => { fetchNews(); }, [fetchNews]);
-
-  const loadMore = useCallback(() => {
-    if (displayNews.length >= allNews.length || loadingMore) return;
-    setLoadingMore(true);
-    setTimeout(() => {
-      setDisplayNews(allNews.slice(0, displayNews.length + 9));
-      setLoadingMore(false);
-    }, 400);
-  }, [displayNews.length, allNews, loadingMore]);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => { if (entries[0].isIntersecting && !loading && !loadingMore) loadMore(); },
-      { threshold: 0.1, rootMargin: '200px' }
-    );
-    if (observerTarget.current) observer.observe(observerTarget.current);
-    return () => observer.disconnect();
-  }, [loading, loadingMore, loadMore]);
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 animate-in fade-in duration-500 pb-24">
@@ -105,7 +68,7 @@ const NewsView: React.FC<NewsViewProps> = ({ t }) => {
         <p className="text-slate-600 dark:text-slate-400 font-medium">{t.news.subtitle}</p>
       </header>
 
-      {loading && displayNews.length === 0 ? (
+      {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="glass rounded-[40px] p-8 space-y-6 animate-pulse bg-white/40 dark:bg-night/40">
@@ -115,17 +78,13 @@ const NewsView: React.FC<NewsViewProps> = ({ t }) => {
             </div>
           ))}
         </div>
-      ) : displayNews.length === 0 ? (
-        <div className="py-20 text-center glass rounded-[40px]">
-          <p className="text-slate-400 font-bold italic">{t.common.noData}</p>
-        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {displayNews.map((item, index) => (
+          {MOCK_NEWS.map((item, index) => (
             <article 
               key={index}
               className="glass group rounded-[40px] p-8 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full animate-in fade-in zoom-in-95 bg-white dark:bg-night"
-              style={{ animationDelay: `${(index % 9) * 50}ms` }}
+              style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="flex justify-between items-start mb-6">
                 <StatusBadge label={t.news.article} type="success" />
@@ -143,24 +102,16 @@ const NewsView: React.FC<NewsViewProps> = ({ t }) => {
                 <span className="text-[11px] font-bold text-slate-500 italic uppercase tracking-wider">
                   {t.news.by} {item.creator}
                 </span>
-                <a 
-                  href={item.link} 
-                  target="_blank" 
-                  rel="noopener"
+                <button 
                   className="w-10 h-10 rounded-2xl bg-yinmn/5 text-yinmn flex items-center justify-center group-hover:bg-yinmn group-hover:text-white transition-all shadow-sm"
-                  aria-label={`Read ${item.title}`}
                 >
                   <ChevronRight size={18} />
-                </a>
+                </button>
               </div>
             </article>
           ))}
         </div>
       )}
-
-      <div ref={observerTarget} className="py-12 flex justify-center">
-        {loadingMore && <div className="w-8 h-8 border-4 border-yinmn/20 border-t-yinmn rounded-full animate-spin" />}
-      </div>
     </div>
   );
 };

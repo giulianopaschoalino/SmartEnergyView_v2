@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { FileText, Info, HelpCircle, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { fetchAboutUs, fetchFAQ, fetchSectorialInfo } from '../services/dataService.ts';
@@ -38,7 +37,9 @@ const AboutUs: React.FC<{t: any; tStatic: any}> = ({ t, tStatic }) => {
     fetchAboutUs()
       .then(res => {
         const firstItem = Array.isArray(res) ? res[0] : res;
-        const text = firstItem?.about || firstItem?.text || firstItem?.content || firstItem?.description || '';
+        // FIX: Cast firstItem to any to allow accessing properties that might not be in the narrowed type
+        const item = firstItem as any;
+        const text = item?.about || item?.text || item?.content || item?.description || '';
         setContent(text);
       })
       .catch((e) => {

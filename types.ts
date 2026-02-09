@@ -59,4 +59,4 @@ export enum ViewMode {
   Profile = 'profile'
 }
 
-export type Language = 'en' | 'pt' | 'es';
+export type Language = 'pt' | 'en' | 'es';
